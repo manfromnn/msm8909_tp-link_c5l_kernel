@@ -1,0 +1,44 @@
+#
+#     date      	author      	why
+#  2015.3.10      liumx         add 860 product
+#  2015.05.21	  liuyk			add 610 product
+
+#
+# YEP_product_list
+#  
+#========================================================
+config QL860_BASE
+	depends on ARCH_MSM8909
+	bool "QL860_BASE version"
+	help
+	  Fix version type as QL860_BASE.
+#========================================================
+#========================================================
+config QL861_BASE
+        depends on ARCH_MSM8909
+        bool "QL860_BASE version"
+        help
+          Fix version type as QL860_BASE.
+#========================================================
+#========================================================
+config QL862_BASE
+        depends on ARCH_MSM8909
+        bool "QL860_BASE version"
+        help
+          Fix version type as QL860_BASE.
+#========================================================
+#========================================================
+config QL610_BASE
+        depends on ARCH_MSM8909
+        bool "QL610_BASE version"
+        help
+          Fix version type as QL610_BASE.
+#========================================================
+
+#========================================================
+config QL613_BASE
+        depends on ARCH_MSM8909
+        bool "QL613_BASE version"
+        help
+          Fix version type as QL613_BASE.
+#========================================================
