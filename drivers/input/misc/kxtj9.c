@@ -197,6 +197,7 @@ static irqreturn_t kxtj9_isr(int irq, void *dev)
 {
 	struct kxtj9_data *tj9 = dev;
 	int err;
+	printk(KERN_ERR"%s  %d \n",__func__,__LINE__);
 
 	/* data ready is the only possible interrupt type */
 	kxtj9_report_acceleration_data(tj9);
@@ -396,6 +397,7 @@ static void kxtj9_device_power_off(struct kxtj9_data *tj9)
 
 	tj9->ctrl_reg1 &= PC1_OFF;
 	err = i2c_smbus_write_byte_data(tj9->client, CTRL_REG1, tj9->ctrl_reg1);
+	printk(KERN_ERR"%s  %d \n",__func__,__LINE__);
 	if (err < 0)
 		dev_err(&tj9->client->dev, "soft power off failed\n");
 
@@ -416,6 +418,7 @@ static int kxtj9_enable(struct kxtj9_data *tj9)
 	err = kxtj9_device_power_on(tj9);
 	if (err < 0)
 		return err;
+	printk(KERN_ERR"%s  %d \n",__func__,__LINE__);
 
 	/* ensure that PC1 is cleared before updating control registers */
 	err = i2c_smbus_write_byte_data(tj9->client, CTRL_REG1, 0);
@@ -595,6 +598,7 @@ static int kxtj9_poll_delay_set(struct sensors_classdev *sensors_cdev,
 //delete by yanfei for poll delay 20140805 begin
 //	if (tj9->enable)
 //		disable_irq(tj9->client->irq);
+	printk(KERN_ERR"%s  %d \n",__func__,__LINE__);
 
 	tj9->last_poll_interval = max(delay_msec, tj9->pdata.min_interval);
 
@@ -614,6 +618,7 @@ static ssize_t kxtj9_get_poll_delay(struct device *dev,
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtj9_data *tj9 = i2c_get_clientdata(client);
+	printk(KERN_ERR"%s  %d \n",__func__,__LINE__);
 
 	return sprintf(buf, "%d\n", tj9->last_poll_interval);
 }
@@ -631,6 +636,7 @@ static ssize_t kxtj9_set_poll_delay(struct device *dev,
 	error = kstrtouint(buf, 10, &interval);
 	if (error < 0)
 		return error;
+	printk(KERN_ERR"%s  %d \n",__func__,__LINE__);
 
 	error = kxtj9_poll_delay_set(&tj9->cdev, interval);
 	if (error < 0)
@@ -690,6 +696,7 @@ static int kxtj9_setup_polled_device(struct kxtj9_data *tj9)
 			"Failed to allocate polled device\n");
 		return -ENOMEM;
 	}
+	printk(KERN_ERR"%s  %d \n",__func__,__LINE__);
 
 	tj9->poll_dev = poll_dev;
 	tj9->input_dev = poll_dev->input;
@@ -1010,7 +1017,7 @@ static int kxtj9_suspend(struct device *dev)
 	struct i2c_client *client = to_i2c_client(dev);
 	struct kxtj9_data *tj9 = i2c_get_clientdata(client);
 	struct input_dev *input_dev = tj9->input_dev;
-
+//	printk(KERN_ERR"%s  %d \n",__func__,__LINE__);
 	mutex_lock(&input_dev->mutex);
 
 	if (input_dev->users && tj9->enable)
@@ -1026,6 +1033,7 @@ static int kxtj9_resume(struct device *dev)
 	struct kxtj9_data *tj9 = i2c_get_clientdata(client);
 	struct input_dev *input_dev = tj9->input_dev;
 	int retval = 0;
+//	printk(KERN_ERR"%s  %d \n",__func__,__LINE__);
 
 	mutex_lock(&input_dev->mutex);
 

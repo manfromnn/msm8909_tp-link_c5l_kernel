@@ -10,7 +10,7 @@
  * GNU General Public License for more details.
  */
 
-#define SENSOR_DRIVER_I2C "camera" //Modified by hanjianfeng for camera bringup 20150209
+#define SENSOR_DRIVER_I2C "qcom,camera" //Modified by hanjianfeng for camera bringup 20150209
 /* Header file declaration */
 #include "msm_sensor.h"
 #include "msm_sd.h"
@@ -887,7 +887,7 @@ int32_t msm_sensor_driver_probe(void *setting,
 	CDBG("sensor_gpio_id %d\n", slave_info->sensor_gpio_id);
 	s_ctrl->sensordata->sensor_gpio_id = slave_info->sensor_gpio_id;	
 // added by yangze for camera hardware info and camera gpio id (ql1001) 2014-06-10 end 
-/*Added by hanjianfeng for camera power control 20140809*/
+	/*Added by hanjianfeng for camera power control 20140809*/
 	s_ctrl->sensordata->power_down_mode = slave_info->power_down_mode;
         
 	s_ctrl->sensordata->ois_name = slave_info->ois_name;
@@ -1328,6 +1328,7 @@ static int32_t msm_sensor_driver_i2c_probe(struct i2c_client *client,
 	int32_t rc = 0;
 	struct msm_sensor_ctrl_t *s_ctrl;
 
+
 	CDBG("\n\nEnter: msm_sensor_driver_i2c_probe");
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		pr_err("%s %s i2c_check_functionality failed\n",
@@ -1392,18 +1393,17 @@ static const struct i2c_device_id i2c_id[] = {
 	{ }
 };
 
+
 static struct i2c_driver msm_sensor_driver_i2c = {
 	.id_table = i2c_id,
 	.probe  = msm_sensor_driver_i2c_probe,
 	.remove = msm_sensor_driver_i2c_remove,
 	.driver = {
 		.name = SENSOR_DRIVER_I2C,
-		#if 0	
 		/*Added Begin: by hanjianfeng for camera bringup (QW702) 20150209*/
 		.owner = THIS_MODULE,
 		.of_match_table = msm_sensor_driver_dt_match,
 		/*Added End: by hanjianfeng for camera bringup (QW702) 20150209*/			
-		#endif
 	},
 };
 

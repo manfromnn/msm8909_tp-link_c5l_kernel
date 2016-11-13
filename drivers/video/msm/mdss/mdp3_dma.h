@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -284,12 +284,9 @@ struct mdp3_dma {
 	struct fb_cmap *gc_cmap;
 	struct fb_cmap *hist_cmap;
 
-	bool (*busy)(void);
-
 	int (*dma_config)(struct mdp3_dma *dma,
 			struct mdp3_dma_source *source_config,
-			struct mdp3_dma_output_config *output_config,
-			bool splash_screen_active);
+			struct mdp3_dma_output_config *output_config);
 
 	int (*dma_sync_config)(struct mdp3_dma *dma, struct mdp3_dma_source
 				*source_config, struct mdp3_tear_check *te);

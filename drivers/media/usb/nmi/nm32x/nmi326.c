@@ -42,6 +42,8 @@
 #include <linux/gpio.h>
 #include <linux/of_gpio.h>
 
+#include <linux/pinctrl/consumer.h>/*Modify by lichuangchuang for QL702 DTV GPIO state (QL702) SW00000000 2015-04-25*/
+
 #include <linux/time.h>
 
 #include "nmi326.h"
@@ -405,8 +407,8 @@ static long isdbt_ioctl(/*struct inode *inode, */struct file *filp, unsigned int
 
 		case IOCTL_ISDBT_INTERRUPT_REGISTER:
 		{
-			unsigned long flags;
-			spin_lock_irqsave(&pdev->isr_lock, flags);
+			//unsigned long flags;
+			//spin_lock_irqsave(&pdev->isr_lock, flags);
 			NM_KMSG("<isdbt> ioctl: interrupt register, (stat : %d)\n", g_irq_status);
 
 			if( g_irq_status == DTV_IRQ_DEINIT && dtv_status==0){
@@ -415,7 +417,7 @@ static long isdbt_ioctl(/*struct inode *inode, */struct file *filp, unsigned int
 				g_irq_status = DTV_IRQ_INIT;
 				dtv_status =1;
 			}
-			spin_unlock_irqrestore(&pdev->isr_lock, flags);
+			//spin_unlock_irqrestore(&pdev->isr_lock, flags);
 			break;
 		}
 
@@ -534,6 +536,10 @@ static struct attribute_group dtv_attr_group = {
 static int  isdbt_probe(struct platform_device *pdev)
 {
 	int ret,rc=0;
+	/*Modify by lichuangchuang for QL702 DTV GPIO state (QL702) SW00000000 2015-04-25 start*/
+	struct pinctrl *pinctrl;
+	struct pinctrl_state *gpio_state_default;
+	/*Modify by lichuangchuang for QL702 DTV GPIO state (QL702) SW00000000 2015-04-25 end*/
 	struct device *isdbt_dev;
 
 	NM_KMSG("<isdbt> isdbt_probe, MAJOR = %d\n", ISDBT_DEV_MAJOR);
@@ -561,7 +567,25 @@ static int  isdbt_probe(struct platform_device *pdev)
 		NM_KMSG("<isdbt> device create failed\n");
 		return -EFAULT;
 	}
+	/*Modify by lichuangchuang for QL702 DTV GPIO state (QL702) SW00000000 2015-04-25 start*/
+	pinctrl = devm_pinctrl_get(&pdev->dev);
+	if (IS_ERR(pinctrl)) {
+		pr_err("%s:failed to get pinctrl\n", __func__);
+		return PTR_ERR(pinctrl);
+	}
 
+	gpio_state_default = pinctrl_lookup_state(pinctrl,
+		"dtv_default");
+	if (IS_ERR(gpio_state_default)) {
+		pr_err("%s:can not get active pinstate\n", __func__);
+		return -EINVAL;
+	}
+
+	rc = pinctrl_select_state(pinctrl,
+		gpio_state_default);
+	if (rc)
+		pr_err("%s:set state failed!\n", __func__);
+	/*Modify by lichuangchuang for QL702 DTV GPIO state (QL702) SW00000000 2015-04-25 end*/
        isdbt_gpio_get(pdev);
 
 	isdbt_gpio_init();	

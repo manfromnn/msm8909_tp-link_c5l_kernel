@@ -63,15 +63,7 @@ enum msm_sensor_power_seq_type_t {
 	SENSOR_I2C_MUX,
 	SENSOR_I2C,
 };
-/*Added Begin: by hanjianfeng  for camera power control 20140808*/
-enum cam_powerdown_mode_t{
-        POWERDOWN_DEFAULT,
-        POWERDOWN_SENSOR_SOFTWARE,
-        POWERDOWN_AF_SOFTWARE,
-        POWERDOWN_ALL_SOFTWARE,
-        POWERDOWN_INVALID,
-};
-/*Added End: by hanjianfeng  for camera power control 20140808*/
+
 enum msm_camera_qup_i2c_write_batch_size_t {
 	MSM_CAMERA_I2C_BATCH_SIZE_1 = 1,
 	MSM_CAMERA_I2C_BATCH_SIZE_2,
@@ -86,6 +78,15 @@ enum msm_camera_qup_i2c_write_batch_t {
 	MSM_CAMERA_I2C_BATCH_ENABLE,
 };
 
+/*Added Begin: by hanjianfeng  for camera power control 20140808*/
+enum cam_powerdown_mode_t{
+        POWERDOWN_DEFAULT,
+        POWERDOWN_SENSOR_SOFTWARE,
+        POWERDOWN_AF_SOFTWARE,
+        POWERDOWN_ALL_SOFTWARE,
+        POWERDOWN_INVALID,
+};
+/*Added End: by hanjianfeng  for camera power control 20140808*/
 enum msm_camera_i2c_reg_addr_type {
 	MSM_CAMERA_I2C_BYTE_ADDR = 1,
 	MSM_CAMERA_I2C_WORD_ADDR,

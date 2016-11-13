@@ -73,13 +73,10 @@ static u8 _gOneDimenFwData[MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE*1024+MSG22XX_FIRMWAR
  * Note.
  * Please modify the name of the below .h depends on the vendor TP that you are using.
  */
-//add by  shihuijun for 86x series project date updated 20150609 start 
-
-#include "mstar_firmware/msg2xxx_HXD_update_ver1007_613_bin.h"
-#include "mstar_firmware/msg2xxx_ofg_update_ver5006_613_bin.h"
-//add by  shihuijun for 86x series project date updated 20150609 end 
-#include "mstar_firmware/msg2xxx_xxxx_update_bin.h"
-#include "mstar_firmware/msg2xxx_yyyy_update_bin.h"
+//modify by shihuijun update 20150617
+#include "msg2xxx_yeji_ver300d_update_bin.h"
+#include "msg2xxx_xxxx_update_bin.h"
+#include "msg2xxx_yyyy_update_bin.h"
 
 static u32 _gUpdateRetryCount = UPDATE_FIRMWARE_RETRY_COUNT;
 //static struct work_struct _gUpdateFirmwareBySwIdWork;
@@ -102,7 +99,6 @@ static u16 _gGestureWakeupValue = 0;
 
 u8 g_ChipType = 0;
 u8 g_DemoModePacket[DEMO_MODE_PACKET_LENGTH] = {0};
-u8 VA_Release_Flag=0;       //add by shihuijun for touch KEYdown-VAdown-VAup-repeat key down have Ghost point 
 
 #ifdef CONFIG_ENABLE_FIRMWARE_DATA_LOG
 FirmwareInfo_t g_FirmwareInfo;
@@ -699,7 +695,7 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
         u8 bIsCorrectFormat = 0;
 
         DBG("received raw data from touch panel as following:\n");
-        DBG("pPacket[0]=%x \n pPacket[1]=%x \n pPacket[2]=%x\n pPacket[3]=%x\n pPacket[4]=%x\n pPacket[5]=%x \n", \
+        DBG("pPacket[0]=%x \n pPacket[1]=%x pPacket[2]=%x pPacket[3]=%x pPacket[4]=%x pPacket[5]=%x \n", \
             pPacket[0], pPacket[1], pPacket[2], pPacket[3], pPacket[4], pPacket[5]);
 
         if (g_ChipType == CHIP_TYPE_MSG22XX && pPacket[0] == 0xA7 && pPacket[1] == 0x00 && pPacket[2] == 0x06 && pPacket[3] == 0x50)
@@ -758,9 +754,9 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
 
                     PRINTF_ERR("Light up screen by DOUBLE_CLICK gesture wakeup.\n");
 
-                    input_report_key(g_InputDevice, KEY_POWER, 1);
+                    input_report_key(g_InputDevice, KEY_ENTER, 1); //modify by pangle for double click event flow
                     input_sync(g_InputDevice);
-                    input_report_key(g_InputDevice, KEY_POWER, 0);
+                    input_report_key(g_InputDevice, KEY_ENTER, 0); //modify by pangle for double click event flow
                     input_sync(g_InputDevice);
                     break;	
 
@@ -770,8 +766,10 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
                     PRINTF_ERR("Light up screen by UP_DIRECT gesture wakeup.\n");
 
                     input_report_key(g_InputDevice, KEY_UP, 1);
+ //                   input_report_key(g_InputDevice, KEY_POWER, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, KEY_UP, 0);
+ //                   input_report_key(g_InputDevice, KEY_POWER, 0);
                     input_sync(g_InputDevice);
                     break;		
                 case 0x61:
@@ -780,8 +778,10 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
                     PRINTF_ERR("Light up screen by DOWN_DIRECT gesture wakeup.\n");
 
                     input_report_key(g_InputDevice, KEY_DOWN, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, KEY_DOWN, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
                     input_sync(g_InputDevice);
                     break;		
                 case 0x62:
@@ -789,9 +789,11 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
 
                     PRINTF_ERR("Light up screen by LEFT_DIRECT gesture wakeup.\n");
 
-                    input_report_key(g_InputDevice, KEY_LEFT, 1);
+                  input_report_key(g_InputDevice, KEY_LEFT, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, KEY_LEFT, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
                     input_sync(g_InputDevice);
                     break;		
                 case 0x63:
@@ -800,71 +802,72 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
                     PRINTF_ERR("Light up screen by RIGHT_DIRECT gesture wakeup.\n");
 
                     input_report_key(g_InputDevice, KEY_RIGHT, 1);
+//                   input_report_key(g_InputDevice, KEY_POWER, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, KEY_RIGHT, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
                     input_sync(g_InputDevice);
-                    break;
-										
-#ifdef GESTURE_ALL_SWITCH       
-								case 0x66:
-                    _gGestureWakeupValue = GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG;
-
-                    PRINTF_ERR("Light up screen by C_CHARACTER gesture wakeup.\n");
-
-                    input_report_key(g_InputDevice, KEY_C, 1);
-                    input_sync(g_InputDevice);
-                    input_report_key(g_InputDevice, KEY_C, 0);
-                    input_sync(g_InputDevice);
-                    break;
-								case 0x64:
+                    break;	
+//modify  by pangle for gesture display 20150304 begin	
+	#ifdef GESTURE_ALL_SWITCH
+                case 0x64:
                     _gGestureWakeupValue = GESTURE_WAKEUP_MODE_m_CHARACTER_FLAG;
 
                     PRINTF_ERR("Light up screen by m_CHARACTER gesture wakeup.\n");
 
                     input_report_key(g_InputDevice, KEY_M, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, KEY_M, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
                     input_sync(g_InputDevice);
-                    break;
-								case 0x67:
-                    _gGestureWakeupValue = GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG;
-
-                    PRINTF_ERR("Light up screen by e_CHARACTER gesture wakeup.\n");
-
-                    input_report_key(g_InputDevice, KEY_E, 1);
-                    input_sync(g_InputDevice);
-                    input_report_key(g_InputDevice, KEY_E, 0);
-                    input_sync(g_InputDevice);
-                    break;
-								case 0x6B:
-                    _gGestureWakeupValue = GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG;
-
-                    PRINTF_ERR("Light up screen by Z_CHARACTER gesture wakeup.\n");
-
-                    input_report_key(g_InputDevice, KEY_Z, 1);
-                    input_sync(g_InputDevice);
-                    input_report_key(g_InputDevice, KEY_Z, 0);
-                    input_sync(g_InputDevice);
-                    break;	
+                    break;		
                 case 0x65:
                     _gGestureWakeupValue = GESTURE_WAKEUP_MODE_W_CHARACTER_FLAG;
 
                     PRINTF_ERR("Light up screen by W_CHARACTER gesture wakeup.\n");
 
                     input_report_key(g_InputDevice, KEY_W, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, KEY_W, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
                     input_sync(g_InputDevice);
                     break;		
-                
+                case 0x66:
+                    _gGestureWakeupValue = GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG;
+
+                    PRINTF_ERR("Light up screen by C_CHARACTER gesture wakeup.\n");
+
+                    input_report_key(g_InputDevice, KEY_C, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
+                    input_sync(g_InputDevice);
+                    input_report_key(g_InputDevice, KEY_C, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
+                    input_sync(g_InputDevice);
+                    break;
+                case 0x67:
+                    _gGestureWakeupValue = GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG;
+
+                    PRINTF_ERR("Light up screen by e_CHARACTER gesture wakeup.\n");
+
+                    input_report_key(g_InputDevice, KEY_E, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
+                    input_sync(g_InputDevice);
+                    input_report_key(g_InputDevice, KEY_E, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
+                    input_sync(g_InputDevice);
+                    break;
                 case 0x68:
                     _gGestureWakeupValue = GESTURE_WAKEUP_MODE_V_CHARACTER_FLAG;
 
                     PRINTF_ERR("Light up screen by V_CHARACTER gesture wakeup.\n");
 
                     input_report_key(g_InputDevice, KEY_V, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, KEY_V, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
                     input_sync(g_InputDevice);
                     break;
                 case 0x69:
@@ -873,8 +876,10 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
                     PRINTF_ERR("Light up screen by O_CHARACTER gesture wakeup.\n");
 
                     input_report_key(g_InputDevice, KEY_O, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, KEY_O, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
                     input_sync(g_InputDevice);
                     break;
                 case 0x6A:
@@ -883,12 +888,26 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
                     PRINTF_ERR("Light up screen by S_CHARACTER gesture wakeup.\n");
 
                     input_report_key(g_InputDevice, KEY_S, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, KEY_S, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
+                    input_sync(g_InputDevice);
+                    break;
+                case 0x6B:
+                    _gGestureWakeupValue = GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG;
+
+                    PRINTF_ERR("Light up screen by Z_CHARACTER gesture wakeup.\n");
+
+                    input_report_key(g_InputDevice, KEY_Z, 1);
+//                    input_report_key(g_InputDevice, KEY_POWER, 1);
+                    input_sync(g_InputDevice);
+                    input_report_key(g_InputDevice, KEY_Z, 0);
+//                    input_report_key(g_InputDevice, KEY_POWER, 0);
                     input_sync(g_InputDevice);
                     break;
 #endif 
-//modify  by shihuijun for 860 gesture 20150602 end 
+//modify  by pangle for gesture display 20150304 end 
 
                 default:
                     _gGestureWakeupValue = 0;
@@ -968,7 +987,7 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
                 pInfo->nFingerNum = 1;
                 pInfo->nTouchKeyCode = pPacket[5];
                 pInfo->nTouchKeyMode = 1;
-                VA_Release_Flag=0;
+
 #ifdef CONFIG_ENABLE_REPORT_KEY_WITH_COORDINATE
                 pInfo->nFingerNum = 1;
                 pInfo->nTouchKeyCode = 0;
@@ -1017,7 +1036,6 @@ static s32 _DrvFwCtrlParsePacket(u8 *pPacket, u16 nLength, TouchInfo_t *pInfo)
         else
         {
             pInfo->nTouchKeyMode = 0; //Touch on screen...
-            VA_Release_Flag=1;
 
 //            if ((nDeltaX == 0) && (nDeltaY == 0))
           if(
@@ -1727,21 +1745,16 @@ void _DrvFwCtrlMsg22xxCheckFirmwareUpdateBySwId(void) // For MSG22XX
 /*merge by pangle at 20150228 end*/
     DBG("nCrcMainA=0x%x, nCrcInfoA=0x%x, nCrcMainB=0x%x, nCrcInfoB=0x%x\n", nCrcMainA, nCrcInfoA, nCrcMainB, nCrcInfoB);
                
-	if (nCrcMainA == nCrcMainB && nCrcInfoA == nCrcInfoB) // Case 1. Main Block:OK, Info Block:OK
-	{
-		eSwId = _DrvFwCtrlMsg22xxGetSwId(EMEM_MAIN);
-		//add by shihuijun for 613 update 20150824 start
-		if (eSwId ==MSG22xx_SW_ID_OFG)
-		{
-			nUpdateBinMajor = msg2xxx_ofg_update_bin[0xBFF5]<<8 | msg2xxx_ofg_update_bin[0xBFF4];
-			nUpdateBinMinor = msg2xxx_ofg_update_bin[0xBFF7]<<8 | msg2xxx_ofg_update_bin[0xBFF6];
-		}
-    else if (eSwId ==MSG22XX_SW_ID_HXD)//HXD CFG add by shihuijun 
-		{
-			nUpdateBinMajor = msg2xxx_HXD_update_bin[0xBFF5]<<8 | msg2xxx_HXD_update_bin[0xBFF4];
-			nUpdateBinMinor = msg2xxx_HXD_update_bin[0xBFF7]<<8 | msg2xxx_HXD_update_bin[0xBFF6];
-		}
-		else //eSwId == MSG22XX_SW_ID_UNDEFINED
+    if (nCrcMainA == nCrcMainB && nCrcInfoA == nCrcInfoB) // Case 1. Main Block:OK, Info Block:OK
+    {
+        eSwId = _DrvFwCtrlMsg22xxGetSwId(EMEM_MAIN);
+    		
+        if ((eSwId == MSG22XX_SW_ID_YEJI)||(eSwId == MSG22XX_SW_ID_DOUBLE))
+        {
+            nUpdateBinMajor = msg2xxx_yeji_update_bin[0xBFF5]<<8 | msg2xxx_yeji_update_bin[0xBFF4];
+            nUpdateBinMinor = msg2xxx_yeji_update_bin[0xBFF7]<<8 | msg2xxx_yeji_update_bin[0xBFF6];
+        }
+        else //eSwId == MSG22XX_SW_ID_UNDEFINED
         {
             DBG("eSwId = 0x%x is an undefined SW ID.\n", eSwId);
 
@@ -1749,45 +1762,30 @@ void _DrvFwCtrlMsg22xxCheckFirmwareUpdateBySwId(void) // For MSG22XX
             nUpdateBinMajor = 0;
             nUpdateBinMinor = 0;    		        						
         }
+    		
+        DBG("eSwId=0x%x, nMajor=%d, nMinor=%d, nUpdateBinMajor=%d, nUpdateBinMinor=%d\n", eSwId, nMajor, nMinor, nUpdateBinMajor, nUpdateBinMinor);
 
-		//add by shihuijun for 613 update 20150824 end
-		DBG("eSwId=0x%x, nMajor=%d, nMinor=%d, nUpdateBinMajor=%d, nUpdateBinMinor=%d\n", eSwId, nMajor, nMinor, nUpdateBinMajor, nUpdateBinMinor);
-
-        if (nUpdateBinMinor != nMinor) 
+        if (nUpdateBinMinor > nMinor)
         {
             if (eSwId < MSG22XX_SW_ID_UNDEFINED && eSwId != 0x0000 && eSwId != 0xFFFF)
             {
-              //add by shihuijun for 613 update 20150824 start
-               if (eSwId == MSG22xx_SW_ID_OFG)
+                if ((eSwId == MSG22XX_SW_ID_YEJI)||(eSwId == MSG22XX_SW_ID_DOUBLE))
                 {
                     for (i = 0; i < (MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE+1); i ++)
                     {
                         if (i < MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE) // i < 48
                         {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_ofg_update_bin[i*1024]), 1024);
+                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_yeji_update_bin[i*1024]), 1024);
                         }
                         else // i == 48
                         {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_ofg_update_bin[i*1024]), 512);
+                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_yeji_update_bin[i*1024]), 512);
                         }
                     }
                 }
-               else if (eSwId == MSG22XX_SW_ID_HXD)
-                {
-                    for (i = 0; i < (MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE+1); i ++)
-                    {
-                        if (i < MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE) // i < 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_HXD_update_bin[i*1024]), 1024);
-                        }
-                        else // i == 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_HXD_update_bin[i*1024]), 512);
-                        }
-                    }
-                }
-							 //add by shihuijun for 613 update 20150824 end
+
                 g_FwDataCount = 0; // Reset g_FwDataCount to 0 after copying update firmware data to temp buffer
+
                 _gUpdateRetryCount = UPDATE_FIRMWARE_RETRY_COUNT;
                 _gIsUpdateInfoBlockFirst = 1; // Set 1 for indicating main block is complete 
                 _gIsUpdateFirmware = 0x11;
@@ -1815,37 +1813,23 @@ void _DrvFwCtrlMsg22xxCheckFirmwareUpdateBySwId(void) // For MSG22XX
 
         if (eSwId < MSG22XX_SW_ID_UNDEFINED && eSwId != 0x0000 && eSwId != 0xFFFF)
         {
-            //add by shihuijun for 613 update 20150824 start
-            if (eSwId == MSG22xx_SW_ID_OFG)
+            if((eSwId == MSG22XX_SW_ID_YEJI)||(eSwId == MSG22XX_SW_ID_DOUBLE))
+            {
+                for (i = 0; i < (MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE+1); i ++)
                 {
-                    for (i = 0; i < (MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE+1); i ++)
+                    if (i < MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE) // i < 48
                     {
-                        if (i < MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE) // i < 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_ofg_update_bin[i*1024]), 1024);
-                        }
-                        else // i == 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_ofg_update_bin[i*1024]), 512);
-                        }
+                        _DrvFwCtrlStoreFirmwareData(&(msg2xxx_yeji_update_bin[i*1024]), 1024);
+                    }
+                    else // i == 48
+                    {
+                        _DrvFwCtrlStoreFirmwareData(&(msg2xxx_yeji_update_bin[i*1024]), 512);
                     }
                 }
-            else if (eSwId == MSG22XX_SW_ID_HXD)
-                {
-                    for (i = 0; i < (MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE+1); i ++)
-                    {
-                        if (i < MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE) // i < 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_HXD_update_bin[i*1024]), 1024);
-                        }
-                        else // i == 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_HXD_update_bin[i*1024]), 512);
-                        }
-                    }
-                }
-						//add by shihuijun for 613 update 20150824 start
+            }
+
             g_FwDataCount = 0; // Reset g_FwDataCount to 0 after copying update firmware data to temp buffer
+
             _gUpdateRetryCount = UPDATE_FIRMWARE_RETRY_COUNT;
             _gIsUpdateInfoBlockFirst = 1; // Set 1 for indicating main block is complete 
             _gIsUpdateFirmware = 0x11;
@@ -1868,37 +1852,21 @@ void _DrvFwCtrlMsg22xxCheckFirmwareUpdateBySwId(void) // For MSG22XX
 
         if (eSwId < MSG22XX_SW_ID_UNDEFINED && eSwId != 0x0000 && eSwId != 0xFFFF)
         {
-            //add by shihuijun for 613 update 20150824 start
-		        
-            if (eSwId == MSG22xx_SW_ID_OFG)
+            if((eSwId == MSG22XX_SW_ID_YEJI)||(eSwId == MSG22XX_SW_ID_DOUBLE))
+            {
+                for (i = 0; i < (MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE+1); i ++)
                 {
-                    for (i = 0; i < (MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE+1); i ++)
+                    if (i < MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE) // i < 48
                     {
-                        if (i < MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE) // i < 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_ofg_update_bin[i*1024]), 1024);
-                        }
-                        else // i == 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_ofg_update_bin[i*1024]), 512);
-                        }
+                        _DrvFwCtrlStoreFirmwareData(&(msg2xxx_yeji_update_bin[i*1024]), 1024);
+                    }
+                    else // i == 48
+                    {
+                        _DrvFwCtrlStoreFirmwareData(&(msg2xxx_yeji_update_bin[i*1024]), 512);
                     }
                 }
-            else if (eSwId == MSG22XX_SW_ID_HXD)
-                {
-                    for (i = 0; i < (MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE+1); i ++)
-                    {
-                        if (i < MSG22XX_FIRMWARE_MAIN_BLOCK_SIZE) // i < 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_HXD_update_bin[i*1024]), 1024);
-                        }
-                        else // i == 48
-                        {
-                            _DrvFwCtrlStoreFirmwareData(&(msg2xxx_HXD_update_bin[i*1024]), 512);
-                        }
-                    }
-                }
-						//add by shihuijun for 613 update 20150824 start
+            }
+
             g_FwDataCount = 0; // Reset g_FwDataCount to 0 after copying update firmware data to temp buffer
 
             _gUpdateRetryCount = UPDATE_FIRMWARE_RETRY_COUNT;
@@ -3940,51 +3908,34 @@ void DrvFwCtrlHandleFingerTouch(void)
         }
         else //touch on screen
         {
-         if (tInfo.nTouchKeyCode != 0)
+            if (tInfo.nTouchKeyCode != 0)
             {
 #ifdef CONFIG_TP_HAVE_KEY
-				//printk("pangle touchkeycode = %d\n",tInfo.nTouchKeyCode);
-				
-	#if defined(CONFIG_QL613_BASE)
-        if (tInfo.nTouchKeyCode == 4) 
-                {
-                    nTouchKeyCode = g_TpVirtualKey[0];           
-                }
-        else if (tInfo.nTouchKeyCode == 1) 
-                {
-                    nTouchKeyCode = g_TpVirtualKey[2];
-                }
-        else if (tInfo.nTouchKeyCode == 2)
-                {
-                    nTouchKeyCode = g_TpVirtualKey[1];
-                }
-	#else
-        if (tInfo.nTouchKeyCode == 2) // TOUCH_KEY_HOME  //modify by pangle at 20150228
+
+                if (tInfo.nTouchKeyCode == 1) // TOUCH_KEY_HOME  //modify by pangle at 20150228
                 {
                     nTouchKeyCode = g_TpVirtualKey[1];           
                 }
-        else if (tInfo.nTouchKeyCode == 4) // TOUCH_KEY_MENU  //modify by pangle at 20150228
-                {
-                    nTouchKeyCode = g_TpVirtualKey[2];
-                } 
-				else if (tInfo.nTouchKeyCode == 1) // TOUCH_KEY_BACK  //modify by pangle at 20150228
+                else if (tInfo.nTouchKeyCode == 2) // TOUCH_KEY_MENU  //modify by pangle at 20150228
                 {
                     nTouchKeyCode = g_TpVirtualKey[0];
-                }
-    #endif         
-				  
-        else if (tInfo.nTouchKeyCode == 5) // TOUCH_KEY_SEARCH 
+                }           
+                else if (tInfo.nTouchKeyCode == 4) // TOUCH_KEY_BACK  //modify by pangle at 20150228
+                {
+                    nTouchKeyCode = g_TpVirtualKey[2];
+                }           
+                else if (tInfo.nTouchKeyCode == 8) // TOUCH_KEY_SEARCH 
                 {	
                     nTouchKeyCode = g_TpVirtualKey[3];   
                     //modify by pangle for back_menu key at 20150512 begin
-					          input_report_key(g_InputDevice, nTouchKeyCode/*KEY_F10*/, 1);
+					input_report_key(g_InputDevice, nTouchKeyCode/*KEY_F10*/, 1);
                     input_sync(g_InputDevice);
                     input_report_key(g_InputDevice, nTouchKeyCode/*KEY_F10*/, 0);
                     input_sync(g_InputDevice);
 					//modify by pangle for back_menu key at 20150512 end
                 }
 				//modify by pangle for back_menu key at 20150512 
-        if ((nLastKeyCode != nTouchKeyCode)&&(nTouchKeyCode != 68))
+                if ((nLastKeyCode != nTouchKeyCode)&&(nTouchKeyCode != 68))
                 {
                     DBG("key touch pressed\n");
                     DBG("nTouchKeyCode = %d, nLastKeyCode = %d\n", nTouchKeyCode, nLastKeyCode);
@@ -3997,11 +3948,6 @@ void DrvFwCtrlHandleFingerTouch(void)
 #ifdef CHANGE_REPORT_TYPE_TO_B   // add by byron 
 					preTouchStatus=0;
 #endif
-                }
-        if(VA_Release_Flag==0)   //add by shihuijun for touch KEYdown-VAdown-VAup-repeat key down have Ghost point  20150827
-                {
-                    DBG("shj VA touch released\n");
-                    DrvPlatformLyrFingerTouchReleased(0, 0);
                 }
 #endif //CONFIG_TP_HAVE_KEY
             }

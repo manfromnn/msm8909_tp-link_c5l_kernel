@@ -165,7 +165,9 @@ struct sensors_classdev {
 	int	(*sensors_write_cal_params)(struct sensors_classdev
 				*sensor_cdev, struct cal_result_t *cal_result);
 };
+//added by chenchen for pocket mode 20140925
 extern bool proximity_open_flag;
+
 extern int sensors_classdev_register(struct device *parent,
 				 struct sensors_classdev *sensors_cdev);
 extern void sensors_classdev_unregister(struct sensors_classdev *sensors_cdev);

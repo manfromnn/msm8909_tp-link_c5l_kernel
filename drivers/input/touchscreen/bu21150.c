@@ -1442,9 +1442,9 @@ static long bu21150_ioctl_unblock_release(void)
 
 	ts->force_unblock_flag = 0;
 
-	ts->frame_waitq_flag = WAITQ_WAIT;
-
 	enable_irq(ts->client->irq);
+
+	ts->frame_waitq_flag = WAITQ_WAIT;
 
 	return 0;
 }

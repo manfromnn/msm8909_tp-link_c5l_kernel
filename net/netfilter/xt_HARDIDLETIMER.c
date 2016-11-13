@@ -299,7 +299,10 @@ static void hardidletimer_tg_destroy(const struct xt_tgdtor_param *par)
 
 		list_del(&info->timer->entry);
 		alarm_cancel(&info->timer->alarm);
+<<<<<<< HEAD
 		cancel_work_sync(&info->timer->work);
+=======
+>>>>>>> 77c6e77f178876ab80ee9ae8288ae78a753cf3d3
 		sysfs_remove_file(hardidletimer_tg_kobj,
 				&info->timer->attr.attr);
 		kfree(info->timer->attr.attr.name);

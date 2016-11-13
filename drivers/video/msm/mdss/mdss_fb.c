@@ -261,13 +261,6 @@ static struct led_classdev backlight_led = {
 	.brightness_set = mdss_fb_set_bl_brightness,
 	.max_brightness = MDSS_MAX_BL_BRIGHTNESS,
 };
-/*add by xingbin for lcm test-automation in factory begin*/
-static int lcd_test_registered = 0;
-struct led_classdev lcd_test_cdev = {
-	.name           = "lcd-test",
-	.flags     = 0,
-};
-/*add by xingbin for lcm test-automation in factory end*/
 
 static ssize_t mdss_fb_get_type(struct device *dev,
 				struct device_attribute *attr, char *buf)
@@ -833,14 +826,6 @@ static int mdss_fb_probe(struct platform_device *pdev)
 		else
 			lcd_backlight_registered = 1;
 	}
-	/*add by xingbin for lcm test-automation in factory begin*/
-		if(!lcd_test_registered){
-			if (led_classdev_register(&pdev->dev, &lcd_test_cdev))
-				pr_err("lcd_test_classdev_register failed\n");
-			else
-				lcd_test_registered = 1;	
-		}
-	/*add by xingbin for lcm test-automation in factory end*/
 
 	mdss_fb_create_sysfs(mfd);
 	mdss_fb_send_panel_event(mfd, MDSS_EVENT_FB_REGISTERED, fbi);
@@ -917,12 +902,6 @@ static int mdss_fb_remove(struct platform_device *pdev)
 		lcd_backlight_registered = 0;
 		led_classdev_unregister(&backlight_led);
 	}
-	//add by xingbin for lcm test-automation in factory begin
-		if(lcd_test_registered){
-			lcd_test_registered = 0;
-			led_classdev_unregister(&lcd_test_cdev);
-		}
-	//add by xingbin for lcm test-automation in factory end
 
 	return 0;
 }
