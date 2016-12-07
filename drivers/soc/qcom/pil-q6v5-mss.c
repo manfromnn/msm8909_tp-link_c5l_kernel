@@ -173,7 +173,7 @@ static int modem_ramdump(int enable, const struct subsys_desc *subsys)
 	if (ret < 0)
 		pr_err("Unable to dump modem fw memory (rc = %d).\n", ret);
 
-	ret = __pil_mss_deinit_image(&drv->q6->desc, false);
+	ret = pil_mss_deinit_image(&drv->q6->desc);
 	if (ret < 0)
 		pr_err("Unable to free up resources (rc = %d).\n", ret);
 

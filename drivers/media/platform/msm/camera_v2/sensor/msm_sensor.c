@@ -18,8 +18,18 @@
 #include <linux/regulator/rpm-smd-regulator.h>
 #include <linux/regulator/consumer.h>
 
+//#define CONFIG_MSMB_CAMERA_DEBUG
 #undef CDBG
+#ifdef CONFIG_MSMB_CAMERA_DEBUG
 #define CDBG(fmt, args...) pr_err(fmt, ##args)
+#else
+#define CDBG(fmt, args...) do { } while (0)
+#endif
+
+//added by yangze for SW00028457 (qc805) 2014-1-12 begin
+static int8_t front_power_state =0;
+static int8_t back_power_state =0;
+//added by yangze for SW00028457 (qc805) 2014-1-12 end
 /*Added Begin: by hanjianfeng for camera power control 20140809*/
 static struct msm_camera_i2c_reg_array ov5648_software_powerdown_reg_array[] = {
   {0x3018, 0x3c},
@@ -32,7 +42,6 @@ static struct msm_camera_i2c_reg_setting ov5648_software_powerdown_settings = {
   .data_type = MSM_CAMERA_I2C_BYTE_DATA,
   .delay = 0,
 };
-
 static struct msm_camera_i2c_reg_array ov8865_software_powerdown_reg_array[] = {
   {0x0100, 0x00},
 };
@@ -56,20 +65,6 @@ static struct msm_camera_i2c_reg_setting af_dw9714_software_powerdown_settings =
   .delay = 0,
 };
 /*Added End: by hanjianfeng for camera power control 20140809*/
-
-/*added by guoben for resolve power issue,SW00182785(QL613)20160111,begin*/
-struct msm_camera_i2c_reg_array af_bu64240_software_powerdown_reg_array[] = {
-    {0x80,0x00},
-};
-
-struct msm_camera_i2c_reg_setting af_bu64240_software_powerdown_settings = {
-    .reg_setting = af_bu64240_software_powerdown_reg_array,
-    .size = ARRAY_SIZE(af_bu64240_software_powerdown_reg_array),
-    .addr_type = MSM_CAMERA_I2C_BYTE_ADDR,
-    .data_type = MSM_CAMERA_I2C_BYTE_DATA,
-    .delay = 0,
-};
-/*added by guoben for resolve power issue,SW00182785(QL613)20160111,end*/
 
 static struct v4l2_file_operations msm_sensor_v4l2_subdev_fops;
 static void msm_sensor_adjust_mclk(struct msm_camera_power_ctrl_t *ctrl)
@@ -507,39 +502,15 @@ int msm_sensor_af_software_powerdown( struct msm_camera_sensor_board_info *senso
 	addr_type = af_i2c_client->addr_type;
 	af_i2c_client->client->addr = 0x18;
 	af_i2c_client->addr_type= MSM_CAMERA_I2C_BYTE_ADDR;
-	if((strncmp(sensordata->actuator_name,"dw9714", 6) == 0)||(strncmp(sensordata->actuator_name,"dw9814", 6) == 0))
+	if((strncmp(sensordata->actuator_name,"dw9714", 6) == 0) || (strncmp(sensordata->actuator_name,"dw9814", 6) == 0))
 	{
 		if(af_dw9714_software_powerdown_settings.size == 0)
 			goto end;
-#if 1
+
 		rc = af_i2c_client->i2c_func_tbl->i2c_write_table(
 			    af_i2c_client, &af_dw9714_software_powerdown_settings);
-#endif
-#if 0
-              rc = af_i2c_client->i2c_func_tbl->i2c_write(
-				af_i2c_client,
-				0x80,
-				0x00,
-				MSM_CAMERA_I2C_BYTE_DATA);
-#endif
-		pr_err("%s,%d rc=%d", __func__, __LINE__, rc);
+		CDBG("%s,%d rc=%d", __func__, __LINE__, rc);
 	}
-    /*added by guoben for resolve power issue,SW00182785(QL613)20160111,begin*/
-    else if(strncmp(sensordata->actuator_name,"bu64240", 7) == 0 )
-    {
-        if(af_bu64240_software_powerdown_settings.size == 0)
-            goto end;
-        
-        rc = af_i2c_client->i2c_func_tbl->i2c_write_table(
-            af_i2c_client, &af_bu64240_software_powerdown_settings);
-
-        pr_err("%s,%d rc=%d\n", __func__, __LINE__, rc);
-    }
-    else
-    {
-        pr_err("%s,%d:no actuator match!\n", __func__, __LINE__);
-    }
-    /*added by guoben for resolve power issue,SW00182785(QL613)20160111,end*/
 end:
 	af_i2c_client->client->addr = slave_addr;
 	af_i2c_client->addr_type= addr_type;
@@ -553,6 +524,401 @@ end:
 	return rc;
 }
 /*Add End: by hanjianfeng for camera power control 20140809*/
+
+//added by yangze for SW00028457 (qc805) 2014-1-12 begin 
+int msm_camera_power_down_control(struct msm_camera_power_ctrl_t *ctrl,
+	enum msm_camera_device_type_t device_type,
+	struct msm_camera_i2c_client *sensor_i2c_client)
+{
+	int index = 0, ret = 0;
+	struct msm_sensor_power_setting *pd = NULL;
+	struct msm_sensor_power_setting *ps;
+
+	CDBG("%s:%d\n", __func__, __LINE__);
+	if (!ctrl || !sensor_i2c_client) {
+		pr_err("failed ctrl %p sensor_i2c_client %p\n", ctrl,
+			sensor_i2c_client);
+		return -EINVAL;
+	}
+	if (device_type == MSM_CAMERA_PLATFORM_DEVICE)
+		sensor_i2c_client->i2c_func_tbl->i2c_util(
+			sensor_i2c_client, MSM_CCI_RELEASE);
+
+	for (index = 0; index < ctrl->power_down_setting_size; index++) {
+		CDBG("%s index %d\n", __func__, index);
+		pd = &ctrl->power_down_setting[index];
+		ps = NULL;
+		CDBG("%s type %d\n", __func__, pd->seq_type);
+		switch (pd->seq_type) {
+		case SENSOR_CLK:
+			ps = msm_camera_get_power_settings(ctrl,
+						pd->seq_type,
+						pd->seq_val);
+			if (ps)
+				msm_cam_clk_enable(ctrl->dev,
+					&ctrl->clk_info[0],
+					(struct clk **)&ps->data[0],
+					ctrl->clk_info_size,
+					0);
+			else
+				pr_err("%s error in power up/down seq data\n",
+								__func__);
+				break;
+		case SENSOR_GPIO:
+			//modified by yangze for camera cts test (qc805) 2014-01-18 begin
+			if((front_power_state == 1)||(back_power_state == 1)){
+				if((pd->seq_val == SENSOR_GPIO_VANA)||(pd->seq_val == SENSOR_GPIO_VDIG)){					
+					break;				
+				}			
+			}
+			//modified by yangze for camera cts test (qc805) 2014-01-18 end
+			
+			if (pd->seq_val >= SENSOR_GPIO_MAX ||
+				!ctrl->gpio_conf->gpio_num_info) {
+				pr_err("%s gpio index %d >= max %d\n", __func__,
+					pd->seq_val,
+					SENSOR_GPIO_MAX);
+				continue;
+			}
+			if (!ctrl->gpio_conf->gpio_num_info->valid
+				[pd->seq_val])
+				continue;
+			gpio_set_value_cansleep(
+				ctrl->gpio_conf->gpio_num_info->gpio_num
+				[pd->seq_val],
+				pd->config_val);
+			break;
+		case SENSOR_VREG:
+			if (pd->seq_val >= CAM_VREG_MAX) {
+				pr_err("%s vreg index %d >= max %d\n", __func__,
+					pd->seq_val,
+					SENSOR_GPIO_MAX);
+				continue;
+			}
+
+			ps = msm_camera_get_power_settings(ctrl,
+						pd->seq_type,
+						pd->seq_val);
+
+			/*Modified Begin: by hanjianfeng for camera power control 20140809*/
+			if (ps)
+			{					
+				if(ps->config_val != POWERDOWN_DEFAULT)
+					break;
+				msm_camera_config_single_vreg(ctrl->dev,
+					&ctrl->cam_vreg[pd->seq_val],
+					(struct regulator **)&ps->data[0],
+					0);
+			}
+			else
+				pr_err("%s error in power up/down seq data\n",
+								__func__);
+			/*Modified End: by hanjianfeng for camera power control 20140809*/
+			break;
+		case SENSOR_I2C_MUX:
+			//modified by yangze for camera cts test (qc805) 2014-01-18 begin			
+			if((front_power_state == 1)||(back_power_state == 1)){
+				break;			
+			}
+			//modified by yangze for camera cts test (qc805) 2014-01-18 end	
+			if (ctrl->i2c_conf && ctrl->i2c_conf->use_i2c_mux)
+				msm_camera_disable_i2c_mux(ctrl->i2c_conf);
+			break;
+		default:
+			pr_err("%s error power seq type %d\n", __func__,
+				pd->seq_type);
+			break;
+		}
+		if (pd->delay > 20) {
+			msleep(pd->delay);
+		} else if (pd->delay) {
+			usleep_range(pd->delay * 1000,
+				(pd->delay * 1000) + 1000);
+		}
+	}
+	if (ctrl->cam_pinctrl_status) {
+		// modified by yangze for camera sensor otp func (ql1001) 2014-06-09 begin
+		//printk(KERN_ERR "yangze %s %d\n",ctrl->dev->driver->name,__LINE__);
+		if((strcmp(ctrl->dev->driver->name,"qcom,eeprom")==0)||(strcmp(ctrl->dev->driver->name,"msm_eeprom")==0)||(strcmp(ctrl->dev->driver->name,"qcom_eeprom")==0)){
+			//printk(KERN_ERR "yangze %s %d\n",ctrl->dev->driver->name,__LINE__);
+			devm_pinctrl_put(ctrl->pinctrl_info.pinctrl);
+		}else{
+			//printk(KERN_ERR "yangze %s %d\n",ctrl->dev->driver->name,__LINE__);
+			ret = pinctrl_select_state(ctrl->pinctrl_info.pinctrl,
+					ctrl->pinctrl_info.gpio_state_suspend);
+			if (ret)
+				pr_err("%s:%d cannot set pin to suspend state",
+					__func__, __LINE__);
+		}
+		// modified by yangze for camera sensor otp func (ql1001) 2014-06-09 end
+	}
+	ctrl->cam_pinctrl_status = 0;
+
+	//modified by yangze for camera cts test (qc805) 2014-01-18 begin
+	if((front_power_state == 1)||(back_power_state == 1)){
+		msm_camera_request_gpio_table(
+			ctrl->gpio_conf->cam_gpio_req_tbl,
+			ctrl->gpio_conf->cam_gpio_req_tbl_size-1, 0);
+	}else{
+	CDBG("hanjf will to release gpio\n");
+		msm_camera_request_gpio_table(
+			ctrl->gpio_conf->cam_gpio_req_tbl,
+			ctrl->gpio_conf->cam_gpio_req_tbl_size, 0);
+	}
+	//modified by yangze for camera cts test (qc805) 2014-01-18 end
+	CDBG("%s exit\n", __func__);
+	return 0;
+}
+
+
+int msm_camera_power_up_control(struct msm_camera_power_ctrl_t *ctrl,
+	enum msm_camera_device_type_t device_type,
+	struct msm_camera_i2c_client *sensor_i2c_client)
+{
+	int rc = 0, index = 0, no_gpio = 0, ret = 0;
+	struct msm_sensor_power_setting *power_setting = NULL;
+
+	CDBG("%s:%d\n", __func__, __LINE__);
+	if (!ctrl || !sensor_i2c_client) {
+		pr_err("failed ctrl %p sensor_i2c_client %p\n", ctrl,
+			sensor_i2c_client);
+		return -EINVAL;
+	}
+	if (ctrl->gpio_conf->cam_gpiomux_conf_tbl != NULL) {
+		pr_err("%s:%d mux install\n", __func__, __LINE__);
+	}
+	ret = msm_camera_pinctrl_init(ctrl);
+	if (ret < 0) {
+		pr_err("%s:%d Initialization of pinctrl failed\n",
+				__func__, __LINE__);
+		ctrl->cam_pinctrl_status = 0;
+	} else {
+		ctrl->cam_pinctrl_status = 1;
+	}
+
+	//modified by yangze for camera cts test (qc805) 2014-01-18 begin
+	if((front_power_state == 1)&&(back_power_state == 1)){
+		rc = msm_camera_request_gpio_table(
+			ctrl->gpio_conf->cam_gpio_req_tbl,
+			ctrl->gpio_conf->cam_gpio_req_tbl_size-1, 1);
+		if (rc < 0){
+			no_gpio = rc;
+		}	
+	}else{
+	CDBG("hanjf will to request gpio\n");
+		rc = msm_camera_request_gpio_table(
+			ctrl->gpio_conf->cam_gpio_req_tbl,
+			ctrl->gpio_conf->cam_gpio_req_tbl_size, 1);
+		if (rc < 0){
+			no_gpio = rc;
+		}	
+	}
+	//modified by yangze for camera cts test (qc805) 2014-01-18 end
+	
+	if (ctrl->cam_pinctrl_status) {
+		ret = pinctrl_select_state(ctrl->pinctrl_info.pinctrl,
+			ctrl->pinctrl_info.gpio_state_active);
+		if (ret)
+			pr_err("%s:%d cannot set pin to active state",
+				__func__, __LINE__);
+	}
+	for (index = 0; index < ctrl->power_setting_size; index++) {
+		CDBG("%s index %d\n", __func__, index);
+		power_setting = &ctrl->power_setting[index];
+		CDBG("%s type %d\n", __func__, power_setting->seq_type);
+		switch (power_setting->seq_type) {
+		case SENSOR_CLK:
+			if (power_setting->seq_val >= ctrl->clk_info_size) {
+				pr_err("%s clk index %d >= max %d\n", __func__,
+					power_setting->seq_val,
+					ctrl->clk_info_size);
+				goto power_up_failed;
+			}
+			if (power_setting->config_val)
+				ctrl->clk_info[power_setting->seq_val].
+					clk_rate = power_setting->config_val;
+
+			rc = msm_cam_clk_enable(ctrl->dev,
+				&ctrl->clk_info[0],
+				(struct clk **)&power_setting->data[0],
+				ctrl->clk_info_size,
+				1);
+			if (rc < 0) {
+				pr_err("%s: clk enable failed\n",
+					__func__);
+				goto power_up_failed;
+			}
+			break;
+		case SENSOR_GPIO:
+			if (no_gpio) {
+				pr_err("%s: request gpio failed\n", __func__);
+				return no_gpio;
+			}
+
+			//modified by yangze for camera cts test (qc805) 2014-01-18 begin
+			if((front_power_state == 1)&&(back_power_state == 1)){
+				if((power_setting->seq_val == SENSOR_GPIO_VANA)||(power_setting->seq_val == SENSOR_GPIO_VDIG)){					
+					break;				
+				}			
+			}
+			//modified by yangze for camera cts test (qc805) 2014-01-18 end
+			
+			if (power_setting->seq_val >= SENSOR_GPIO_MAX ||
+				!ctrl->gpio_conf->gpio_num_info) {
+				pr_err("%s gpio index %d >= max %d\n", __func__,
+					power_setting->seq_val,
+					SENSOR_GPIO_MAX);
+				goto power_up_failed;
+			}
+			if (!ctrl->gpio_conf->gpio_num_info->valid
+				[power_setting->seq_val])
+				continue;
+			CDBG("%s:%d gpio set val %d\n", __func__, __LINE__,
+				ctrl->gpio_conf->gpio_num_info->gpio_num
+				[power_setting->seq_val]);
+			gpio_set_value_cansleep(
+				ctrl->gpio_conf->gpio_num_info->gpio_num
+				[power_setting->seq_val],
+				power_setting->config_val);
+			break;
+		case SENSOR_VREG:
+			if (power_setting->seq_val >= CAM_VREG_MAX) {
+				pr_err("%s vreg index %d >= max %d\n", __func__,
+					power_setting->seq_val,
+					SENSOR_GPIO_MAX);
+				goto power_up_failed;
+			}
+			msm_camera_config_single_vreg(ctrl->dev,
+				&ctrl->cam_vreg[power_setting->seq_val],
+				(struct regulator **)&power_setting->data[0],
+				1);
+			break;
+		case SENSOR_I2C_MUX:
+			//modified by yangze for camera cts test (qc805) 2014-01-18 begin			
+			if((front_power_state == 1)&&(back_power_state == 1)){
+				break;			
+			}
+			//modified by yangze for camera cts test (qc805) 2014-01-18 end			
+			if (ctrl->i2c_conf && ctrl->i2c_conf->use_i2c_mux)
+				msm_camera_enable_i2c_mux(ctrl->i2c_conf);
+			break;
+		default:
+			pr_err("%s error power seq type %d\n", __func__,
+				power_setting->seq_type);
+			break;
+		}
+		if (power_setting->delay > 20) {
+			msleep(power_setting->delay);
+		} else if (power_setting->delay) {
+			usleep_range(power_setting->delay * 1000,
+				(power_setting->delay * 1000) + 1000);
+		}
+	}
+
+	if (device_type == MSM_CAMERA_PLATFORM_DEVICE) {
+		rc = sensor_i2c_client->i2c_func_tbl->i2c_util(
+			sensor_i2c_client, MSM_CCI_INIT);
+		if (rc < 0) {
+			pr_err("%s cci_init failed\n", __func__);
+			goto power_up_failed;
+		}
+	}
+
+	CDBG("%s exit\n", __func__);
+	return 0;
+power_up_failed:
+	pr_err("%s:%d failed\n", __func__, __LINE__);
+	for (index--; index >= 0; index--) {
+		CDBG("%s index %d\n", __func__, index);
+		power_setting = &ctrl->power_setting[index];
+		CDBG("%s type %d\n", __func__, power_setting->seq_type);
+		switch (power_setting->seq_type) {
+
+		case SENSOR_CLK:
+			msm_cam_clk_enable(ctrl->dev,
+				&ctrl->clk_info[0],
+				(struct clk **)&power_setting->data[0],
+				ctrl->clk_info_size,
+				0);
+			break;
+		case SENSOR_GPIO:
+			//modified by yangze for camera cts test (qc805) 2014-01-18 begin
+			if((front_power_state == 1)&&(back_power_state == 1)){
+				if((power_setting->seq_val == SENSOR_GPIO_VANA)||(power_setting->seq_val == SENSOR_GPIO_VDIG)){					
+					break;				
+				}			
+			}
+			//modified by yangze for camera cts test (qc805) 2014-01-18 end
+			
+			if (!ctrl->gpio_conf->gpio_num_info->valid
+				[power_setting->seq_val])
+				continue;
+			gpio_set_value_cansleep(
+				ctrl->gpio_conf->gpio_num_info->gpio_num
+				[power_setting->seq_val], GPIOF_OUT_INIT_LOW);
+			break;
+		case SENSOR_VREG:
+			msm_camera_config_single_vreg(ctrl->dev,
+				&ctrl->cam_vreg[power_setting->seq_val],
+				(struct regulator **)&power_setting->data[0],
+				0);
+			break;
+		case SENSOR_I2C_MUX:
+			//modified by yangze for camera cts test (qc805) 2014-01-18 begin			
+			if((front_power_state == 1)&&(back_power_state == 1)){
+				break;			
+			}
+			//modified by yangze for camera cts test (qc805) 2014-01-18 end
+			
+			if (ctrl->i2c_conf && ctrl->i2c_conf->use_i2c_mux)
+				msm_camera_disable_i2c_mux(ctrl->i2c_conf);
+			break;
+		default:
+			pr_err("%s error power seq type %d\n", __func__,
+				power_setting->seq_type);
+			break;
+		}
+		if (power_setting->delay > 20) {
+			msleep(power_setting->delay);
+		} else if (power_setting->delay) {
+			usleep_range(power_setting->delay * 1000,
+				(power_setting->delay * 1000) + 1000);
+		}
+	}
+	if (ctrl->cam_pinctrl_status) {
+		// modified by yangze for camera sensor otp func (ql1001) 2014-06-09 begin
+		//printk(KERN_ERR "yangze %s %d\n",ctrl->dev->driver->name,__LINE__);
+		if((strcmp(ctrl->dev->driver->name,"qcom,eeprom")==0)||(strcmp(ctrl->dev->driver->name,"msm_eeprom")==0)||(strcmp(ctrl->dev->driver->name,"qcom_eeprom")==0)){
+			//printk(KERN_ERR "yangze %s %d\n",ctrl->dev->driver->name,__LINE__);
+			devm_pinctrl_put(ctrl->pinctrl_info.pinctrl);
+		}else{
+			//printk(KERN_ERR "yangze %s %d\n",ctrl->dev->driver->name,__LINE__);
+			ret = pinctrl_select_state(ctrl->pinctrl_info.pinctrl,
+					ctrl->pinctrl_info.gpio_state_suspend);
+			if (ret)
+				pr_err("%s:%d cannot set pin to suspend state",
+					__func__, __LINE__);
+		}
+		// modified by yangze for camera sensor otp func (ql1001) 2014-06-09 end
+	}
+	ctrl->cam_pinctrl_status = 0;
+
+	//modified by yangze for camera cts test (qc805) 2014-01-18 begin
+	if((front_power_state == 1)&&(back_power_state == 1)){
+		msm_camera_request_gpio_table(
+			ctrl->gpio_conf->cam_gpio_req_tbl,
+			ctrl->gpio_conf->cam_gpio_req_tbl_size-1, 0);
+	}else{
+		msm_camera_request_gpio_table(
+			ctrl->gpio_conf->cam_gpio_req_tbl,
+			ctrl->gpio_conf->cam_gpio_req_tbl_size, 0);
+	}
+	
+	//modified by yangze for camera cts test (qc805) 2014-01-18 end
+	return rc;
+}
+//added by yangze for SW00028457 (qc805) 2014-1-12 end
+
 int msm_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 {
 	struct msm_camera_power_ctrl_t *power_info;
@@ -576,6 +942,16 @@ int msm_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 			__func__, __LINE__, power_info, sensor_i2c_client);
 		return -EINVAL;
 	}
+
+	//added by yangze for SW00028457 (qc805) 2014-1-12 begin
+	if(s_ctrl->sensordata->sensor_info->position == FRONT_CAMERA_B){		
+		front_power_state = 0;	
+	}		
+
+	if(s_ctrl->sensordata->sensor_info->position == BACK_CAMERA_B){	
+		back_power_state = 0;	
+	}
+	//added by yangze for SW00028457 (qc805) 2014-1-12 end
 	/*Add Begin: by hanjianfeng for camera power control 20140809*/
 	if(s_ctrl->sensordata->power_down_mode != POWERDOWN_DEFAULT)
 	{
@@ -599,8 +975,11 @@ int msm_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 		}
 	}
 	/*Add End: by hanjianfeng for camera power control 20140809*/
-	return msm_camera_power_down(power_info, sensor_device_type,
+
+	//added by yangze for SW00028457 (qc805) 2014-1-12 begin
+	return msm_camera_power_down_control(power_info, sensor_device_type,
 		sensor_i2c_client);
+	//added by yangze for SW00028457 (qc805) 2014-1-12 end
 }
 
 int msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
@@ -610,7 +989,8 @@ int msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 	struct msm_camera_i2c_client *sensor_i2c_client;
 	struct msm_camera_slave_info *slave_info;
 	const char *sensor_name;
-	uint32_t retry = 0;
+	// modified by yangze for msm_camera_power_up_control (ql1001) 2014-06-19
+	//uint32_t retry = 0;
 
 	if (!s_ctrl) {
 		pr_err("%s:%d failed: %p\n",
@@ -630,25 +1010,62 @@ int msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 			sensor_i2c_client, slave_info, sensor_name);
 		return -EINVAL;
 	}
-
+	
 	if (s_ctrl->set_mclk_23880000)
-		msm_sensor_adjust_mclk(power_info);
+		msm_sensor_adjust_mclk(power_info);	
 
-	for (retry = 0; retry < 3; retry++) {
-		rc = msm_camera_power_up(power_info, s_ctrl->sensor_device_type,
-			sensor_i2c_client);
-		if (rc < 0)
-			return rc;
-		rc = msm_sensor_check_id(s_ctrl);
-		if (rc < 0) {
-			msm_camera_power_down(power_info,
-				s_ctrl->sensor_device_type, sensor_i2c_client);
-			msleep(20);
-			continue;
-		} else {
-			break;
-		}
+	//added by yangze for SW00028457 (qc805) 2014-1-12 begin
+	if(s_ctrl->sensordata->sensor_info->position == FRONT_CAMERA_B){		
+		front_power_state = 1;	
+	}		
+
+	if(s_ctrl->sensordata->sensor_info->position == BACK_CAMERA_B){	
+		back_power_state = 1;	
 	}
+	//added by yangze for SW00028457 (qc805) 2014-1-12 end
+	
+	// modified by yangze for msm_camera_power_up_control (ql1001) 2014-06-19 begin
+	//for (retry = 0; retry < 3; retry++) {
+		//added by yangze for SW00028457 (qc805) 2014-1-12 begin
+		rc = msm_camera_power_up_control(power_info, s_ctrl->sensor_device_type,
+			sensor_i2c_client);
+		if (rc < 0){
+			//added by yangze for SW00028457 (qc805) 2014-1-12 begin
+			if(s_ctrl->sensordata->sensor_info->position == FRONT_CAMERA_B){		
+				front_power_state = 0;	
+			}		
+
+			if(s_ctrl->sensordata->sensor_info->position == BACK_CAMERA_B){	
+				back_power_state = 0;	
+			}
+			//added by yangze for SW00028457 (qc805) 2014-1-12 end		
+			return rc;
+		}	
+		//added by yangze for SW00028457 (qc805) 2014-1-12 end
+		//pr_err("%s: yangze is_probe_succeed = %d\n",__func__,s_ctrl->is_probe_succeed);
+		if(s_ctrl->is_probe_succeed != 1){
+			rc = msm_sensor_check_id(s_ctrl);
+			if (rc < 0) {
+				//added by yangze for SW00028457 (qc805) 2014-1-12 begin
+				if(s_ctrl->sensordata->sensor_info->position == FRONT_CAMERA_B){		
+					front_power_state = 0;	
+				}		
+
+				if(s_ctrl->sensordata->sensor_info->position == BACK_CAMERA_B){	
+					back_power_state = 0;	
+				}
+				
+				msm_camera_power_down_control(power_info,
+					s_ctrl->sensor_device_type, sensor_i2c_client);
+				//added by yangze for SW00028457 (qc805) 2014-1-12 end
+				//msleep(20);
+				//continue;
+			} //else {
+				//break;
+			//}
+		}
+	//}
+	// modified by yangze for msm_camera_power_up_control (ql1001) 2014-06-19 end
 
 	return rc;
 }
@@ -692,6 +1109,7 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 		pr_err("msm_sensor_match_id chip id doesnot match\n");
 		return -ENODEV;
 	}
+
 	// added by yangze for check pin value of camera id (ql1001) 2014-06-11 begin
 	if(s_ctrl->sensordata->power_info.gpio_conf->gpio_num_info->gpio_num[SENSOR_GPIO_ID]){
 		pin_cameraid_value = gpio_get_value(s_ctrl->sensordata->power_info.gpio_conf->gpio_num_info->gpio_num[SENSOR_GPIO_ID]);
@@ -759,7 +1177,10 @@ static long msm_sensor_subdev_ioctl(struct v4l2_subdev *sd,
 	case VIDIOC_MSM_SENSOR_GET_AF_STATUS:
 		return msm_sensor_get_af_status(s_ctrl, argp);
 	case VIDIOC_MSM_SENSOR_RELEASE:
-	// added by yangze for 8916 yuv sensor (8916) 2014-06-25
+	// deled by yangze for 8916 yuv sensor (8916) 2014-06-25 begin	
+		//msm_sensor_stop_stream(s_ctrl);
+		pr_err("%s: yangze cmd = VIDIOC_MSM_SENSOR_RELEASE\n",__func__);
+	// deled by yangze for 8916 yuv sensor (8916) 2014-06-25 end
 		return 0;
 	case MSM_SD_SHUTDOWN:
 		msm_sensor_stop_stream(s_ctrl);

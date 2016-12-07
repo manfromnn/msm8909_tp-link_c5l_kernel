@@ -24,7 +24,7 @@ extern "C" {
 //#include "cust_gpio_usage.h"
 //#include "cust_eint.h"
 
-#define NM_DEBUG_ON
+//#define NM_DEBUG_ON /*Modify by lichuangchuang for QL702 DTV GPIO state (QL702) SW00000000 2015-04-25*/
 
 #ifdef NM_DEBUG_ON
 //#define NM_KMSG(x...) printk(KERN_DEBUG ">ISDBT< " x)

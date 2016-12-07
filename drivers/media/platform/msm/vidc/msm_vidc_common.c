@@ -697,24 +697,12 @@ static void handle_event_change(enum command_response cmd, void *data)
 				__func__, inst, &event_notify->packet_buffer,
 				&event_notify->extra_data_buffer);
 
-			/*
-			* If buffer release event is received with inst->state
-			* greater than STOP means client called STOP directly
-			* without FLUSH. This also means that they don't expect
-			* these buffers back. Processing these commands will not
-			* add any value. This can also results deadlocks between
-			* try_state and event_notify due to inst->sync_lock.
-			*/
-
-			mutex_lock(&inst->lock);
-			if (inst->state >= MSM_VIDC_STOP ||
+			if (inst->state == MSM_VIDC_CORE_INVALID ||
 				inst->core->state == VIDC_CORE_INVALID) {
-				dprintk(VIDC_ERR,
+				dprintk(VIDC_DBG,
 					"Event release buf ref received in invalid state - discard\n");
-				mutex_unlock(&inst->lock);
 				return;
 			}
-			mutex_unlock(&inst->lock);
 
 			/*
 			* Get the buffer_info entry for the
@@ -739,6 +727,8 @@ static void handle_event_change(enum command_response cmd, void *data)
 				"RELEASE REFERENCE EVENT FROM F/W - fd = %d offset = %d\n",
 				ptr[0], ptr[1]);
 
+			mutex_lock(&inst->sync_lock);
+
 			/* Decrement buffer reference count*/
 			mutex_lock(&inst->registeredbufs.lock);
 			list_for_each_entry(temp, &inst->registeredbufs.list,
@@ -748,6 +738,7 @@ static void handle_event_change(enum command_response cmd, void *data)
 					break;
 				}
 			}
+			mutex_unlock(&inst->registeredbufs.lock);
 
 			/*
 			* Release buffer and remove from list
@@ -756,7 +747,7 @@ static void handle_event_change(enum command_response cmd, void *data)
 			if (unmap_and_deregister_buf(inst, binfo))
 				dprintk(VIDC_ERR,
 				"%s: buffer unmap failed\n", __func__);
-			mutex_unlock(&inst->registeredbufs.lock);
+			mutex_unlock(&inst->sync_lock);
 
 			/*send event to client*/
 			v4l2_event_queue_fh(&inst->event_handler, &buf_event);
@@ -2148,8 +2139,6 @@ static int msm_comm_session_abort(struct msm_vidc_inst *inst)
 		return -EINVAL;
 	}
 	hdev = inst->core->device;
-	abort_completion = SESSION_MSG_INDEX(SESSION_ABORT_DONE);
-	init_completion(&inst->completions[abort_completion]);
 
 	rc = call_hfi_op(hdev, session_abort, (void *)inst->session);
 	if (rc) {
@@ -2157,6 +2146,8 @@ static int msm_comm_session_abort(struct msm_vidc_inst *inst)
 			"%s session_abort failed rc: %d\n", __func__, rc);
 		return rc;
 	}
+	abort_completion = SESSION_MSG_INDEX(SESSION_ABORT_DONE);
+	init_completion(&inst->completions[abort_completion]);
 	rc = wait_for_completion_timeout(
 			&inst->completions[abort_completion],
 			msecs_to_jiffies(msm_vidc_hw_rsp_timeout));

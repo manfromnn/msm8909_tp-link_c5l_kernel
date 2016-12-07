@@ -175,11 +175,11 @@ static int msm_csiphy_lane_config(struct csiphy_device *csiphy_dev,
 		msm_camera_io_w(csiphy_params->settle_cnt,
 			csiphybase + csiphy_dev->ctrl_reg->csiphy_reg.
 			mipi_csiphy_lnn_cfg3_addr + 0x40*j);
-		/* add by lifeng for making sure release time of termination behind trail region for hi545(QL860) begin*/
+/*Added Begin: by hanjianfeng for camera csiphy config error of hi544 (msm8909) 20150304*/
 		msm_camera_io_w(csiphy_params->settle_cnt,
 			csiphybase + csiphy_dev->ctrl_reg->csiphy_reg.
 			mipi_csiphy_lnn_cfg4_addr + 0x40*j);
-		/* add by lifeng for making sure release time of termination behind trail region for hi545(QL860) end*/
+/*Added End: by hanjianfeng for camera csiphy config error of hi544 (msm8909) 20150304*/
 		msm_camera_io_w(csiphy_dev->ctrl_reg->csiphy_reg.
 			mipi_csiphy_interrupt_mask_val, csiphybase +
 			csiphy_dev->ctrl_reg->csiphy_reg.

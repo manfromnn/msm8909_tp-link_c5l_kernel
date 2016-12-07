@@ -320,7 +320,7 @@
 		qcom,mport = <0>;
 		qcom,target-dev = <&cpubw>;
 	};
-//xiongzuan remove 200MHz by 20150720 begin
+
 	qcom,msm-cpufreq {
 		reg = <0 4>;
 		compatible = "qcom,msm-cpufreq";
@@ -331,7 +331,7 @@
 		clock-names = "cpu0_clk", "cpu1_clk",
 				"cpu2_clk", "cpu3_clk";
 		qcom,cpufreq-table =
-			// <  200000 >,
+			 <  200000 >,
 			 <  400000 >,
 			 <  533330 >,
 			 <  800000 >,
@@ -341,7 +341,7 @@
 			 < 1248000 >,
 			 < 1267200 >;
 	};
-//xiongzuan remove 200MHz by 20150720 end
+
 
 	blsp1_uart1: serial@78af000 {
 		compatible = "qcom,msm-lsuart-v14";
@@ -437,7 +437,6 @@
 			qcom,sensor-name = "xo_therm_buf";
 		};
 	};
-
 /*xiongzuan modify for KTM-table by 20150430 begin*/
 	qcom,msm-thermal {
 		compatible = "qcom,msm-thermal";
@@ -1117,7 +1116,7 @@
                       <0x7884000 0x23000>;
                 interrupt-names = "spi_irq", "spi_bam_irq";
                 interrupts = <0 100 0>, <0 238 0>;
-                spi-max-frequency = <19200000>;
+                spi-max-frequency = <19200000>;/*Modify by lichuangchuang for QL702 DTV SPI frequency (QL702) SW00000000 2015-04-25*/
                 pinctrl-names = "spi_default", "spi_sleep";
                 pinctrl-0 = <&spi0_default &spi0_cs0_active>;
                 pinctrl-1 = <&spi0_sleep &spi0_cs0_sleep>;
@@ -1132,7 +1131,7 @@
                 qcom,bam-producer-pipe-index = <15>;
                 qcom,master-id = <86>;
 		
-	/*add by wangtao for qw806 DTV (qw806) SW000000 2014-09-13 start*/
+	/*add by wangtao for qw806 DTV (qw806) SW00000000 2015-04-25 start*/
 		dtv,spi@0 {
 			compatible = "nmi,nmi326";
 			reg = <0>;
@@ -1144,6 +1143,8 @@
 	
 	nmi,nmi326{
 		compatible = "nmi,nmi325_isdbt";
+		pinctrl-names = "dtv_default";
+		pinctrl-0 = <&nmi326_reset_default &nmi326_power_default &nmi326_irq_default>;
 		nmi,reset-gpio = <&msm_gpio 20 0>;
 		nmi,power-enable-gpio = <&msm_gpio 21 0>;
 		nmi,irq-gpio = <&msm_gpio 36 0>;
@@ -1151,7 +1152,7 @@
 		interrupts = <36 0>;
 		interrupt-names = "nmi326_irq";
 	};
-	/*add by wangtao for qw806 DTV (qw806) SW000000 2014-09-13 end*/
+	/*add by wangtao for qw806 DTV (qw806) SW00000000 2015-04-25 end*/
 
 	dma_blsp1: qcom,sps-dma@7884000 { /* BLSP1 */
 		#dma-cells = <4>;

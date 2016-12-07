@@ -252,28 +252,6 @@ static void mdp3_dma_done_notifier(struct mdp3_dma *dma,
 	}
 	spin_unlock_irqrestore(&dma->dma_lock, flag);
 }
-/*add qcom patch for display flash blue screen by xingbin begin*/
-/*
-static void mdp3_dma_clk_auto_gating(struct mdp3_dma *dma, int enable)
-{
-	u32 cgc;
-	int clock_bit = 10;
-
-	clock_bit += dma->dma_sel;
-
-	if (enable) {
-		cgc = MDP3_REG_READ(MDP3_REG_CGC_EN);
-		cgc |= BIT(clock_bit);
-		MDP3_REG_WRITE(MDP3_REG_CGC_EN, cgc);
-
-	} else {
-		cgc = MDP3_REG_READ(MDP3_REG_CGC_EN);
-		cgc &= ~BIT(clock_bit);
-		MDP3_REG_WRITE(MDP3_REG_CGC_EN, cgc);
-	}
-}
-*/
-/*add qcom patch for display flash blue screen by xingbin end*/
 
 int mdp3_dma_sync_config(struct mdp3_dma *dma,
 	struct mdp3_dma_source *source_config, struct mdp3_tear_check *te)
@@ -321,8 +299,7 @@ int mdp3_dma_sync_config(struct mdp3_dma *dma,
 
 static int mdp3_dmap_config(struct mdp3_dma *dma,
 			struct mdp3_dma_source *source_config,
-			struct mdp3_dma_output_config *output_config,
-			bool splash_screen_active)
+			struct mdp3_dma_output_config *output_config)
 {
 	u32 dma_p_cfg_reg, dma_p_size, dma_p_out_xy;
 
@@ -338,17 +315,14 @@ static int mdp3_dmap_config(struct mdp3_dma *dma,
 
 	dma_p_size = source_config->width | (source_config->height << 16);
 	dma_p_out_xy = source_config->x | (source_config->y << 16);
-	if (!splash_screen_active) {
-		MDP3_REG_WRITE(MDP3_REG_DMA_P_CONFIG, dma_p_cfg_reg);
-		MDP3_REG_WRITE(MDP3_REG_DMA_P_SIZE, dma_p_size);
-		MDP3_REG_WRITE(MDP3_REG_DMA_P_IBUF_ADDR,
-			       (u32)source_config->buf);
-		MDP3_REG_WRITE(MDP3_REG_DMA_P_IBUF_Y_STRIDE,
-			       source_config->stride);
-		MDP3_REG_WRITE(MDP3_REG_DMA_P_OUT_XY, dma_p_out_xy);
 
-		MDP3_REG_WRITE(MDP3_REG_DMA_P_FETCH_CFG, 0x40);
-	}
+	MDP3_REG_WRITE(MDP3_REG_DMA_P_CONFIG, dma_p_cfg_reg);
+	MDP3_REG_WRITE(MDP3_REG_DMA_P_SIZE, dma_p_size);
+	MDP3_REG_WRITE(MDP3_REG_DMA_P_IBUF_ADDR, (u32)source_config->buf);
+	MDP3_REG_WRITE(MDP3_REG_DMA_P_IBUF_Y_STRIDE, source_config->stride);
+	MDP3_REG_WRITE(MDP3_REG_DMA_P_OUT_XY, dma_p_out_xy);
+
+	MDP3_REG_WRITE(MDP3_REG_DMA_P_FETCH_CFG, 0x40);
 
 	dma->source_config = *source_config;
 	dma->output_config = *output_config;
@@ -377,8 +351,7 @@ static void mdp3_dmap_config_source(struct mdp3_dma *dma)
 
 static int mdp3_dmas_config(struct mdp3_dma *dma,
 			struct mdp3_dma_source *source_config,
-			struct mdp3_dma_output_config *output_config,
-			bool splash_screen_active)
+			struct mdp3_dma_output_config *output_config)
 {
 	u32 dma_s_cfg_reg, dma_s_size, dma_s_out_xy;
 
@@ -395,17 +368,14 @@ static int mdp3_dmas_config(struct mdp3_dma *dma,
 	dma_s_size = source_config->width | (source_config->height << 16);
 	dma_s_out_xy = source_config->x | (source_config->y << 16);
 
-	if (!splash_screen_active) {
-		MDP3_REG_WRITE(MDP3_REG_DMA_S_CONFIG, dma_s_cfg_reg);
-		MDP3_REG_WRITE(MDP3_REG_DMA_S_SIZE, dma_s_size);
-		MDP3_REG_WRITE(MDP3_REG_DMA_S_IBUF_ADDR,
-			       (u32)source_config->buf);
-		MDP3_REG_WRITE(MDP3_REG_DMA_S_IBUF_Y_STRIDE,
-			       source_config->stride);
-		MDP3_REG_WRITE(MDP3_REG_DMA_S_OUT_XY, dma_s_out_xy);
+	MDP3_REG_WRITE(MDP3_REG_DMA_S_CONFIG, dma_s_cfg_reg);
+	MDP3_REG_WRITE(MDP3_REG_DMA_S_SIZE, dma_s_size);
+	MDP3_REG_WRITE(MDP3_REG_DMA_S_IBUF_ADDR, (u32)source_config->buf);
+	MDP3_REG_WRITE(MDP3_REG_DMA_S_IBUF_Y_STRIDE, source_config->stride);
+	MDP3_REG_WRITE(MDP3_REG_DMA_S_OUT_XY, dma_s_out_xy);
 
-		MDP3_REG_WRITE(MDP3_REG_SECONDARY_RD_PTR_IRQ, 0x10);
-	}
+	MDP3_REG_WRITE(MDP3_REG_SECONDARY_RD_PTR_IRQ, 0x10);
+
 	dma->source_config = *source_config;
 	dma->output_config = *output_config;
 
@@ -877,8 +847,7 @@ static int mdp3_dmap_histo_reset(struct mdp3_dma *dma)
 	spin_lock_irqsave(&dma->histo_lock, flag);
 
 	init_completion(&dma->histo_comp);
-/*add qcom patch for display flash blue screen by xingbin*/
-	//mdp3_dma_clk_auto_gating(dma, 0);
+
 
 	MDP3_REG_WRITE(MDP3_REG_DMA_P_HIST_INTR_ENABLE, BIT(0)|BIT(1));
 	MDP3_REG_WRITE(MDP3_REG_DMA_P_HIST_RESET_SEQ_START, 1);
@@ -900,8 +869,6 @@ static int mdp3_dmap_histo_reset(struct mdp3_dma *dma)
 		ret = 0;
 	}
 	mdp3_dma_callback_disable(dma, MDP3_DMA_CALLBACK_TYPE_HIST_RESET_DONE);
-	/*add qcom patch for display flash blue screen by xingbin*/
-	//mdp3_dma_clk_auto_gating(dma, 1);
 
 	return ret;
 }
@@ -945,14 +912,6 @@ static int mdp3_dmap_histo_op(struct mdp3_dma *dma, u32 op)
 		ret = -EINVAL;
 	}
 	return ret;
-}
-
-bool mdp3_dmap_busy(void)
-{
-	u32 val;
-
-	val = MDP3_REG_READ(MDP3_REG_DISPLAY_STATUS);
-	return val & MDP3_DMA_P_BUSY_BIT;
 }
 
 static int mdp3_dma_start(struct mdp3_dma *dma, struct mdp3_intf *intf)
@@ -1048,7 +1007,6 @@ int mdp3_dma_init(struct mdp3_dma *dma)
 		dma->dma_done_notifier = mdp3_dma_done_notifier;
 		dma->start = mdp3_dma_start;
 		dma->stop = mdp3_dma_stop;
-		dma->busy = mdp3_dmap_busy;
 		break;
 	case MDP3_DMA_S:
 		dma->dma_config = mdp3_dmas_config;

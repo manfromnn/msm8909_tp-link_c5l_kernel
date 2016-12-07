@@ -184,39 +184,6 @@ static struct dsi_cmd_desc backlight_cmd[] = {
 	{{DTYPE_DCS_WRITE1, 1, 0, 0, 1, sizeof(led_cabc_mode)},led_cabc_mode},
 	{{DTYPE_DCS_WRITE1, 1, 0, 0, 1, sizeof(led_pwm1)},led_pwm1},
 };
-//define backlight array by lihuiqin begin
-#ifdef CONFIG_BACKLIGHT_CURVE_ENABLE
-static int backlight_value[]={
-       0   ,  8 ,  8  ,8   ,8   ,8   ,8   ,8   ,8 ,8,
-	8   ,  8  ,  8 , 8  ,8   ,8   ,8   ,8   ,8 ,8 ,
-       9   ,  9  ,  9 , 9  ,9   ,9   ,9   ,9   ,9 ,9 ,
-       10  ,  10, 10, 10 ,10 ,10 ,10 ,10 ,10 ,10,
-       10  ,  10, 10, 10 ,10 ,10 ,10 ,10 ,10 ,10,
-       10  ,  10, 10, 10 ,11 ,11 ,12 ,12 ,13 ,13 ,
-       14, 14   ,15 , 15 ,16 ,16 ,17 ,17  ,18 ,18,
-       19 , 20 ,20  ,21  ,21 ,22 ,22 ,23  ,24 ,24,
-       25 , 26 ,26  ,27  ,27  ,28 ,29 ,30  ,30,31,
-       32, 32 ,33   ,34  ,34  ,35  ,36 ,37 ,37 ,38, 
-       39 , 40 ,41  ,41  ,42 ,43  ,44 ,45  ,46,46 ,
-       47 ,48 ,49   ,50  ,51 ,52  ,53 ,54  ,54 ,55,    
-       56 ,57 ,58   ,59 ,60   ,61  ,62 ,63  ,64 ,65,
-       66 ,67 ,68   ,69 ,70   ,71  ,72 ,73  ,74 ,76,
-       77 ,78 ,79   ,80 ,81   ,82  ,83 ,85  ,86 ,87,
-       88 ,89 ,90   ,92 ,93   ,94 ,95  ,96  ,98 ,99,
-       100,101,103,104,105,107,108,109,111,112,
-       113,114,116,117,119,120,121,123,124,126,
-       127,128,130,131,133,134,136,137,139,140,
-       141,143,144,146,148,149,151,152,154,155,
-       157,158,160,162,163,165,166,168,170,171,
-       173,175,176,178,180,181,183,185,186,188,
-       190,192,193,195,197,199,200,202,204,206,
-       208,209,211,213,215,217,219,220,222,224,
-       226,228,230,232,234,236,237,239,241,243,
-       245,247,249,251,253,255
-       
-       };
-#endif
-//define backlight array by lihuiqin end
 
 static void mdss_dsi_panel_bklt_dcs(struct mdss_dsi_ctrl_pdata *ctrl, int level)
 {
@@ -228,19 +195,16 @@ static void mdss_dsi_panel_bklt_dcs(struct mdss_dsi_ctrl_pdata *ctrl, int level)
 		if (ctrl->ndx != DSI_CTRL_LEFT)
 			return;
 	}
-/* modify backlight by lihuiqin begin */
-#ifdef CONFIG_BACKLIGHT_CURVE_ENABLE
-	led_pwm1[1] =(unsigned char)backlight_value[level];
-       pr_err("level_framework = %d, level_kernel=%d\n",level,led_pwm1[1] );
-#else 
-	pr_info("%s: level=%d\n", __func__, level);
+
+	pr_debug("%s: level=%d\n", __func__, level);
+
 	led_pwm1[1] = (unsigned char)level;
-#endif
-/*modify backlight by lihuiqin end*/
-	if((level >=1)&&(resume_flag !=1))
+	//add by xingbin for lcd flicker at power on  begin
+	if((resume_flag!=1)&&(level!=0))
 		led_cabc_mode[1] = 0x2c;
 	else
 		led_cabc_mode[1] = 0x24;
+	//add by xingbin for lcd flicker at power on  end
 
 	memset(&cmdreq, 0, sizeof(cmdreq));
 	cmdreq.cmds = backlight_cmd;
@@ -587,9 +551,8 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 {
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
 	struct mdss_dsi_ctrl_pdata *sctrl = NULL;
-//added by litao for cabc begin
-	static u32 bl_level_old;
-//added by litao for cabc end
+	static u32 bl_level_old = 0;//add by xingbin for old backlight 20150408 
+
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return;
@@ -603,16 +566,18 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 	 * for the backlight brightness. If the brightness is less
 	 * than it, the controller can malfunction.
 	 */
-//added by litao for cabc begin
+//added by xingbin for backlight  problem begin
 		if((bl_level>bl_level_old)&&(0==bl_level_old))
 		{
+			pr_info("%s:bl_level = %d\n",__func__,bl_level);
+			resume_flag = 1;
+		}else{
+			if(bl_level==0){
 				pr_info("%s:bl_level = %d\n",__func__,bl_level);
-				resume_flag = 1;
-		}
-		else	{
+			}
 			resume_flag = 0;
 		}
-//added by litao for cabc end	
+//added by xingbin for backlight problem  end	
 	if ((bl_level < pdata->panel_info.bl_min) && (bl_level != 0))
 		bl_level = pdata->panel_info.bl_min;
 
@@ -652,16 +617,15 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 			__func__);
 		break;
 	}
-//added by litao for cabc begin
-	bl_level_old = bl_level;
-//added by litao for cabc end
+	bl_level_old = bl_level;//add by xingbin for old backlight store 20150408
 }
 
 static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 {
 	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
 	struct mdss_panel_info *pinfo;
-	pr_err(" mdss_dsi_panel_on--S\n");
+
+	pr_info(" mdss_dsi_panel_on--E\n");
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return -EINVAL;
@@ -680,11 +644,10 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 
 	if (ctrl->on_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->on_cmds);
-
 end:
 	pinfo->blank_state = MDSS_PANEL_BLANK_UNBLANK;
 	pr_debug("%s:-\n", __func__);
-	pr_err(" mdss_dsi_panel_on--E\n");
+	pr_info(" mdss_dsi_panel_on--X\n");
 	return 0;
 }
 
@@ -692,7 +655,7 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 {
 	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
 	struct mdss_panel_info *pinfo;
-	pr_err(" mdss_dsi_panel_off--S\n");
+	pr_info(" mdss_dsi_panel_off--E\n");
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return -EINVAL;
@@ -715,7 +678,7 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 end:
 	pinfo->blank_state = MDSS_PANEL_BLANK_BLANK;
 	pr_debug("%s:-\n", __func__);
-	pr_err(" mdss_dsi_panel_off--E\n");
+	pr_info(" mdss_dsi_panel_off--X\n");
 	return 0;
 }
 

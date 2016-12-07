@@ -96,6 +96,10 @@ enum {
 #define SPK_PMD 2
 #define SPK_PMU 3
 
+//Added by lichuangchuang for ext_spk pa control (8916) SW00000000 2014/07/16 begin
+bool current_ext_spk_pa_state = false;
+//Added by lichuangchuang for ext_spk pa control (8916) SW00000000 2014/07/16 end
+
 //Added by lichuangchuang for ext_spk pa control mode (8916) SW00110406 2015/02/06
 int ext_spk_mode = 2;  // 1:0-1    2:0-1-0-1    3:0-1-0-1-0-1   4:0-1-0-1-0-1-0-1 (defalt: 2us; *** 0.75->10us.
 
@@ -1267,15 +1271,24 @@ static int msm8x16_wcd_pa_gain_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
-//modified by chaofubang for ext_spk pa control (8909) SW00000000 2015/05/28 begin
+//Added by lichuangchuang for ext_spk pa control (8916) SW00124935 2015/03/24 begin
 static int msm8x16_wcd_ext_spk_get(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
 	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
-	
-	ucontrol->value.integer.value[0] = ext_spk_mode;
+
+	if (current_ext_spk_pa_state == false) {
+		ucontrol->value.integer.value[0] = 0;
+	} else if (current_ext_spk_pa_state == true) {
+		ucontrol->value.integer.value[0] = 1;
+	} else  {
+		dev_err(codec->dev, "%s: ERROR: Unsupported Speaker ext = %d\n",
+			__func__, current_ext_spk_pa_state);
+		return -EINVAL;
+	}
+
 	dev_dbg(codec->dev, "%s: current_ext_spk_pa_state = %d\n", __func__,
-			ucontrol->value.integer.value[0] ? 1 : 0);
+			current_ext_spk_pa_state);
 	return 0;
 }
 
@@ -1283,13 +1296,39 @@ static int msm8x16_wcd_ext_spk_set(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
 	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
+	int i = 0;
 
 	dev_dbg(codec->dev, "%s: ucontrol->value.integer.value[0] = %ld\n",
 		__func__, ucontrol->value.integer.value[0]);
-	ext_spk_mode = ucontrol->value.integer.value[0];
+	switch (ucontrol->value.integer.value[0]) {
+		case 0:
+			//if(gpio_is_valid(ext_spk_pa_gpio))
+			//	gpio_direction_output(ext_spk_pa_gpio, 0);
+			current_ext_spk_pa_state = false;
+			break;
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+			ext_spk_mode = ucontrol->value.integer.value[0];
+			if(gpio_is_valid(ext_spk_pa_gpio)){
+				for(i = 0; i <ext_spk_mode ; i++){
+			//		gpio_direction_output(ext_spk_pa_gpio, 0);
+			//		udelay(1);
+			//		gpio_direction_output(ext_spk_pa_gpio, 1);
+			//		udelay(1);
+				}
+			}
+			current_ext_spk_pa_state = true;
+			break;
+		default:
+			return -EINVAL;
+	}
+	dev_dbg(codec->dev, "%s: current_ext_spk_pa_state = %d\n",
+		__func__, current_ext_spk_pa_state);
 	return 0;
 }
-//modified by chaofubang for ext_spk pa control (8909) SW00000000 2015/05/28 end
+//Added by lichuangchuang for ext_spk pa control (8916) SW00124935 2015/03/24 end
 
 static int msm8x16_wcd_boost_option_get(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
@@ -3089,7 +3128,7 @@ static int msm8x16_wcd_hph_pa_event(struct snd_soc_dapm_widget *w,
 {
 	struct snd_soc_codec *codec = w->codec;
 	struct msm8x16_wcd_priv *msm8x16_wcd = snd_soc_codec_get_drvdata(codec);
-
+	int i = 0;//Added by lichuangchuang for ext_spk pa pop (8916) SW00077296 2014/12/30
 
 	dev_dbg(codec->dev, "%s: %s event = %d\n", __func__, w->name, event);
 
@@ -3118,9 +3157,30 @@ static int msm8x16_wcd_hph_pa_event(struct snd_soc_dapm_widget *w,
 			snd_soc_update_bits(codec,
 				MSM8X16_WCD_A_CDC_RX2_B6_CTL, 0x01, 0x00);
 		}
+		//Added by lichuangchuang for ext_spk pa pop (8916) SW00124935 2015/03/24 begin
+		usleep_range(10000, 10100);
+		if (w->shift == 4){
+			if(current_ext_spk_pa_state){
+				if(gpio_is_valid(ext_spk_pa_gpio)){
+					for(i = 0; i <ext_spk_mode; i++){
+						gpio_direction_output(ext_spk_pa_gpio, 0);
+						udelay(1);
+						gpio_direction_output(ext_spk_pa_gpio, 1);
+						udelay(1);
+					}
+				}
+			}
+		}
+		//Added by lichuangchuang for ext_spk pa pop (8916) SW00124935 2015/03/24 end
 		break;
 
 	case SND_SOC_DAPM_PRE_PMD:
+		//Added by lichuangchuang for ext_spk pa pop (8916) SW00124935 2015/03/24 begin
+		if (w->shift == 4){
+			if(gpio_is_valid(ext_spk_pa_gpio))
+				gpio_direction_output(ext_spk_pa_gpio, 0);
+		}
+		//Added by lichuangchuang for ext_spk pa pop (8916) SW00124935 2015/03/24 end
 		if (w->shift == 5) {
 			snd_soc_update_bits(codec,
 				MSM8X16_WCD_A_CDC_RX1_B6_CTL, 0x01, 0x01);
@@ -4034,7 +4094,7 @@ static const struct msm8x16_wcd_reg_mask_val
 	/* Initialize current threshold to 350MA
 	 * number of wait and run cycles to 4096
 	 */
-	{MSM8X16_WCD_A_ANALOG_RX_COM_OCP_CTL, 0xFF, 0x12},
+	{MSM8X16_WCD_A_ANALOG_RX_COM_OCP_CTL, 0xFF, 0xD1},
 	{MSM8X16_WCD_A_ANALOG_RX_COM_OCP_COUNT, 0xFF, 0xFF},
 };
 

@@ -67,32 +67,29 @@
 #include "short_test_ANA4_Y.h"
 #endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
 #elif defined(CONFIG_ENABLE_CHIP_MSG22XX)
-// add by shihuijun  ito test for 86x update 20150619 start 
 // Modify.
-#include "open_test_RIU1_hxd.h"
-#include "open_test_RIU2_hxd.h"
-#include "open_test_RIU3_hxd.h"
-// Modify.
-#include "short_test_RIU1_hxd.h"
-#include "short_test_RIU2_hxd.h"
-#include "short_test_RIU3_hxd.h"
-#ifdef CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE  
-#include "short_test_RIU4_hxd.h"
-#endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
-//add by pangle at 20151123 for ito test begin
-#include "open_test_RIU1_ofilm.h"
-#include "open_test_RIU2_ofilm.h"
-#include "open_test_RIU3_ofilm.h"
-// Modify.
-#include "short_test_RIU1_ofilm.h"
-#include "short_test_RIU2_ofilm.h"
-#include "short_test_RIU3_ofilm.h"
-#ifdef CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE  
-#include "short_test_RIU4_ofilm.h"
-#endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
-//add by pangle at 20151123 for ito test end
-// add by shihuijun  ito test for 86x update 20150619  end
+#include "open_test_RIU1_yeji.h"
+#include "open_test_RIU2_yeji.h"
+#include "open_test_RIU3_yeji.h"
 
+//#include "open_test_RIU1_undefine.h"
+//#include "open_test_RIU2_undefine.h"
+//#include "open_test_RIU3_undefine.h"
+
+// Modify.
+#include "short_test_RIU1_yeji.h"
+#include "short_test_RIU2_yeji.h"
+#include "short_test_RIU3_yeji.h"
+#ifdef CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE  
+#include "short_test_RIU4_yeji.h"
+#endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
+
+//#include "short_test_RIU1_undefine.h"
+//#include "short_test_RIU2_undefine.h"
+//#include "short_test_RIU3_undefine.h"
+#ifdef CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE  
+//#include "short_test_RIU4_undefine.h"
+#endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
 #endif
 
 /*=============================================================*/
@@ -211,8 +208,6 @@ static u8 *_gMAP41_3 = NULL;
 static u8 *_gMAP41_4 = NULL;
 
 static u8 *_gSHORT_MAP4 = NULL;
-u8 Mptest_id = 0;  //add by pangle at 20151123 for ito test 
-
 #endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
 
 
@@ -430,117 +425,53 @@ static u16 _DrvMpTestItoTestChooseTpType(void)
         _gShort_4_GPO = short_4_X_GPO;
 #endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
 #elif defined(CONFIG_ENABLE_CHIP_MSG22XX)
-//add by pangle at 20151123 for ito test begin
-	if(Mptest_id == 1)   //HXD
-	{
-		printk("****pangle Enter HXD1\n");
-		_gOpenRIU1 = open_1_HXD;
-        _gOpenRIU2 = open_2_HXD;
-        _gOpenRIU3 = open_3_HXD;
+        _gOpenRIU1 = open_1_X;
+        _gOpenRIU2 = open_2_X;
+        _gOpenRIU3 = open_3_X;
 
-        _gShort_RIU1 = short_1_HXD;
-        _gShort_RIU2 = short_2_HXD;
-        _gShort_RIU3 = short_3_HXD;
+        _gShort_RIU1 = short_1_X;
+        _gShort_RIU2 = short_2_X;
+        _gShort_RIU3 = short_3_X;
 
-        _gOpenSubFrameNum1 = NUM_OPEN_1_SENSOR_HXD;
-        _gOpenSubFrameNum2 = NUM_OPEN_2_SENSOR_HXD;
-        _gOpenSubFrameNum3 = NUM_OPEN_3_SENSOR_HXD;
-        _gShortSubFrameNum1 = NUM_SHORT_1_SENSOR_HXD;
-        _gShortSubFrameNum2 = NUM_SHORT_2_SENSOR_HXD;
-        _gShortSubFrameNum3 = NUM_SHORT_3_SENSOR_HXD;
+        _gOpenSubFrameNum1 = NUM_OPEN_1_SENSOR_X;
+        _gOpenSubFrameNum2 = NUM_OPEN_2_SENSOR_X;
+        _gOpenSubFrameNum3 = NUM_OPEN_3_SENSOR_X;
+        _gShortSubFrameNum1 = NUM_SHORT_1_SENSOR_X;
+        _gShortSubFrameNum2 = NUM_SHORT_2_SENSOR_X;
+        _gShortSubFrameNum3 = NUM_SHORT_3_SENSOR_X;
 
 #ifdef CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
-        _gShort_RIU4 = short_4_HXD;
-        _gShortSubFrameNum4 = NUM_SHORT_4_SENSOR_HXD;
+        _gShort_RIU4 = short_4_X;
+        _gShortSubFrameNum4 = NUM_SHORT_4_SENSOR_X;
 #endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
-
-	}
-	else if(Mptest_id ==5)  //OFG
-	{
-	printk("****pangle Enter OFG1\n");
-        _gOpenRIU1 = open_1_OFG;
-        _gOpenRIU2 = open_2_OFG;
-        _gOpenRIU3 = open_3_OFG;
-
-        _gShort_RIU1 = short_1_OFG;
-        _gShort_RIU2 = short_2_OFG;
-        _gShort_RIU3 = short_3_OFG;
-
-        _gOpenSubFrameNum1 = NUM_OPEN_1_SENSOR_OFG;
-        _gOpenSubFrameNum2 = NUM_OPEN_2_SENSOR_OFG;
-        _gOpenSubFrameNum3 = NUM_OPEN_3_SENSOR_OFG;
-        _gShortSubFrameNum1 = NUM_SHORT_1_SENSOR_OFG;
-        _gShortSubFrameNum2 = NUM_SHORT_2_SENSOR_OFG;
-        _gShortSubFrameNum3 = NUM_SHORT_3_SENSOR_OFG;
-
-#ifdef CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
-        _gShort_RIU4 = short_4_OFG;
-        _gShortSubFrameNum4 = NUM_SHORT_4_SENSOR_OFG;
-#endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
-
-	}
-
 #endif
-     if(Mptest_id == 1)   //HXD
-     {
-     printk("****pangle Enter HXD2\n");
-        _gMAP1 = MAP1_HXD;
-        _gMAP2 = MAP2_HXD;
-        _gMAP3 = MAP3_HXD;
-        _gMAP40_1 = MAP40_1_HXD;
-        _gMAP40_2 = MAP40_2_HXD;
-        _gMAP41_1 = MAP41_1_HXD;
-        _gMAP41_2 = MAP41_2_HXD;
 
-        _gSHORT_MAP1 = SHORT_MAP1_HXD;
-        _gSHORT_MAP2 = SHORT_MAP2_HXD;
-        _gSHORT_MAP3 = SHORT_MAP3_HXD;
+        _gMAP1 = MAP1_X;
+        _gMAP2 = MAP2_X;
+        _gMAP3 = MAP3_X;
+        _gMAP40_1 = MAP40_1_X;
+        _gMAP40_2 = MAP40_2_X;
+        _gMAP41_1 = MAP41_1_X;
+        _gMAP41_2 = MAP41_2_X;
+
+        _gSHORT_MAP1 = SHORT_MAP1_X;
+        _gSHORT_MAP2 = SHORT_MAP2_X;
+        _gSHORT_MAP3 = SHORT_MAP3_X;
 
 #ifdef CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE       
-        _gMAP40_3 = MAP40_3_HXD;
-        _gMAP40_4 = MAP40_4_HXD;
-        _gMAP41_3 = MAP41_3_HXD;
-        _gMAP41_4 = MAP41_4_HXD;
+        _gMAP40_3 = MAP40_3_X;
+        _gMAP40_4 = MAP40_4_X;
+        _gMAP41_3 = MAP41_3_X;
+        _gMAP41_4 = MAP41_4_X;
 
-        _gSHORT_MAP4 = SHORT_MAP4_HXD;
+        _gSHORT_MAP4 = SHORT_MAP4_X;
 #endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
  
-        _gItoTestKeyNum = NUM_KEY_HXD;
-        _gItoTestDummyNum = NUM_DUMMY_HXD;
-        _gItoTestTriangleNum = NUM_SENSOR_HXD;
-        _gIsEnable2R = ENABLE_2R_HXD;
-     	}
-	 	else if(Mptest_id ==5)  //OFG
-	 	{
-	 	printk("****pangle Enter OFG2\n");
-		    _gMAP1 = MAP1_OFG;
-	        _gMAP2 = MAP2_OFG;
-	        _gMAP3 = MAP3_OFG;
-	        _gMAP40_1 = MAP40_1_OFG;
-	        _gMAP40_2 = MAP40_2_OFG;
-	        _gMAP41_1 = MAP41_1_OFG;
-	        _gMAP41_2 = MAP41_2_OFG;
-
-	        _gSHORT_MAP1 = SHORT_MAP1_OFG;
-	        _gSHORT_MAP2 = SHORT_MAP2_OFG;
-	        _gSHORT_MAP3 = SHORT_MAP3_OFG;
-
-#ifdef CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE       
-	        _gMAP40_3 = MAP40_3_OFG;
-	        _gMAP40_4 = MAP40_4_OFG;
-	        _gMAP41_3 = MAP41_3_OFG;
-	        _gMAP41_4 = MAP41_4_OFG;
-
-	        _gSHORT_MAP4 = SHORT_MAP4_OFG;
-#endif //CONFIG_ENABLE_MP_TEST_ITEM_FOR_2R_TRIANGLE
-	 
-	        _gItoTestKeyNum = NUM_KEY_OFG;
-	        _gItoTestDummyNum = NUM_DUMMY_OFG;
-	        _gItoTestTriangleNum = NUM_SENSOR_OFG;
-	        _gIsEnable2R = ENABLE_2R_OFG;
-	 	}
+        _gItoTestKeyNum = NUM_KEY_X;
+        _gItoTestDummyNum = NUM_DUMMY_X;
+        _gItoTestTriangleNum = NUM_SENSOR_X;
+        _gIsEnable2R = ENABLE_2R_X;
     }
-//add by pangle at 20151123 for ito test end
 /*	
     else if (TP_OF_Y == nTpType) // Modify. 
     {

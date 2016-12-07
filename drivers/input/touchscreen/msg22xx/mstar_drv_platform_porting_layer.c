@@ -342,11 +342,9 @@ void DrvPlatformLyrTouchDevicePowerOn(void)
 void DrvPlatformLyrTouchDevicePowerOff(void)
 {
     DBG("*** %s() ***\n", __func__);
-	//modify by pangle for TP suspend interruptde by android sleep procedure at 20151021 begin
-	wake_lock(&mstar_wake_lock);
-	DrvFwCtrlOptimizeCurrentConsumption (); 
-    wake_unlock(&mstar_wake_lock);
-	//modify by pangle for TP suspend interruptde by android sleep procedure at 20151021 end
+	
+	DrvFwCtrlOptimizeCurrentConsumption ();  //add by pangle for suspend function at 20150401 
+    
 #if defined(CONFIG_TOUCH_DRIVER_RUN_ON_SPRD_PLATFORM) || defined(CONFIG_TOUCH_DRIVER_RUN_ON_QCOM_PLATFORM)
 //    gpio_direction_output(MS_TS_MSG_IC_GPIO_RST, 0);
     gpio_set_value(mstar_reset_gpio, 0);
@@ -571,24 +569,23 @@ s32 DrvPlatformLyrInputDeviceInitialize(struct i2c_client *pClient)
 #endif
 
 #ifdef CONFIG_ENABLE_GESTURE_WAKEUP
-    input_set_capability(g_InputDevice, EV_KEY, KEY_POWER);
+    input_set_capability(g_InputDevice, EV_KEY, KEY_ENTER);  //modify by pangle for double click event flow
     input_set_capability(g_InputDevice, EV_KEY, KEY_UP);
     input_set_capability(g_InputDevice, EV_KEY, KEY_DOWN);
     input_set_capability(g_InputDevice, EV_KEY, KEY_LEFT);
     input_set_capability(g_InputDevice, EV_KEY, KEY_RIGHT);
-//modify  by shihuijuin for 860 gesture  20150602 begin	
+//modify  by pangle for gesture display 20150304 begin
 #ifdef GESTURE_ALL_SWITCH
-		input_set_capability(g_InputDevice, EV_KEY, KEY_C);
-		input_set_capability(g_InputDevice, EV_KEY, KEY_M);
-		input_set_capability(g_InputDevice, EV_KEY, KEY_E);
-		input_set_capability(g_InputDevice, EV_KEY, KEY_Z);
     input_set_capability(g_InputDevice, EV_KEY, KEY_W);
     input_set_capability(g_InputDevice, EV_KEY, KEY_Z);
     input_set_capability(g_InputDevice, EV_KEY, KEY_V);
     input_set_capability(g_InputDevice, EV_KEY, KEY_O);
+    input_set_capability(g_InputDevice, EV_KEY, KEY_M);
+    input_set_capability(g_InputDevice, EV_KEY, KEY_C);
+    input_set_capability(g_InputDevice, EV_KEY, KEY_E);
     input_set_capability(g_InputDevice, EV_KEY, KEY_S);
 #endif
-//modify  by shihuijuin for 860 gesture  20150602 end
+//modify  by pangle for gesture display 20150304 end
 #endif //CONFIG_ENABLE_GESTURE_WAKEUP
 
 /*
@@ -644,7 +641,8 @@ s32 DrvPlatformLyrInputDeviceInitialize(struct i2c_client *pClient)
         }
     }
 #endif
-
+//modify by pangle at 20150409 begin
+/*
 #ifdef CONFIG_ENABLE_GESTURE_WAKEUP
     input_set_capability(g_InputDevice, EV_KEY, KEY_POWER);
     input_set_capability(g_InputDevice, EV_KEY, KEY_UP);
@@ -660,7 +658,8 @@ s32 DrvPlatformLyrInputDeviceInitialize(struct i2c_client *pClient)
     input_set_capability(g_InputDevice, EV_KEY, KEY_E);
     input_set_capability(g_InputDevice, EV_KEY, KEY_S);
 #endif //CONFIG_ENABLE_GESTURE_WAKEUP
-
+*/
+//modify by pangle at 20150409 end
 /*
 #ifdef CONFIG_TP_HAVE_KEY
     set_bit(TOUCH_KEY_MENU, g_InputDevice->keybit); //Menu
@@ -790,9 +789,7 @@ s32 DrvPlatformLyrTouchDeviceRemove(struct i2c_client *pClient)
     gpio_free(mstar_irq_gpio);
     gpio_free(mstar_reset_gpio);
     input_unregister_device(g_InputDevice);
-#endif  
-wake_lock_destroy(&mstar_wake_lock);  //modify by pangle for TP suspend interruptde by android sleep procedure at 20151021
-
+#endif    
 #ifdef CONFIG_ENABLE_FIRMWARE_DATA_LOG
     kset_unregister(g_TouchKSet);
     kobject_put(g_TouchKObj);

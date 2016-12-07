@@ -207,6 +207,8 @@ struct wcd_mbhc {
 #endif
 //Added by lichuangchuang for fastmmi headset status (8916) SW00000000 2014/06/18 end
 };
+//Added by lichuangchuang for ext_spk pa control (8916) SW00000000 2014/07/16
+extern bool current_ext_spk_pa_state;
 #define WCD_MBHC_CAL_SIZE(buttons, rload) ( \
 	sizeof(struct wcd_mbhc_general_cfg) + \
 	sizeof(struct wcd_mbhc_plug_detect_cfg) + \

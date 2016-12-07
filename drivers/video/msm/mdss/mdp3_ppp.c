@@ -45,7 +45,7 @@
 #define CLK_FUDGE_NUM		12
 #define CLK_FUDGE_DEN		10
 
-#define YUV_BW_FUDGE_NUM	10
+#define YUV_BW_FUDGE_NUM	20
 #define YUV_BW_FUDGE_DEN	10
 
 struct ppp_resource ppp_res;
@@ -554,8 +554,8 @@ int mdp3_calc_ppp_res(struct msm_fb_data_type *mfd,  struct blit_req_list *lreq)
 		ppp_res.solid_fill_byte += req->dst_rect.w * req->dst_rect.h *
 						bpp.bpp_num / bpp.bpp_den;
 		if ((panel_info->yres/2 > req->dst_rect.h) ||
-		(mdp3_res->solid_fill_vote_en)) {
-			pr_debug("Solid fill less than H/2 or solid_fill_vote_en %d\n",
+			(mdp3_res->solid_fill_vote_en)) {
+			pr_debug("Solid fill less than H/2 or fill vote %d\n",
 				mdp3_res->solid_fill_vote_en);
 			ATRACE_END(__func__);
 			return 0;
@@ -632,8 +632,8 @@ int mdp3_calc_ppp_res(struct msm_fb_data_type *mfd,  struct blit_req_list *lreq)
 		honest_ppp_ab = ppp_res.solid_fill_byte * 4;
 		pr_debug("solid fill honest_ppp_ab %llu\n", honest_ppp_ab);
 	} else {
-		honest_ppp_ab += ppp_res.solid_fill_byte;
-		mdp3_res->solid_fill_vote_en = true;
+	honest_ppp_ab += ppp_res.solid_fill_byte;
+	mdp3_res->solid_fill_vote_en = true;
         }
 
 	honest_ppp_ab = honest_ppp_ab * fps;
@@ -712,6 +712,7 @@ void mdp3_start_ppp(struct ppp_blit_op *blit_op)
 		pr_debug("Skip mdp3_ppp_kickoff\n");
 	else
 		mdp3_ppp_kickoff();
+
 	if (!(blit_op->solid_fill)) {
 		ppp_res.solid_fill_pixel = 0;
 		ppp_res.solid_fill_byte = 0;

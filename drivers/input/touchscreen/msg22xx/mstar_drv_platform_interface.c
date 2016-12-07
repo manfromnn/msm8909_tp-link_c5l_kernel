@@ -122,11 +122,11 @@ void MsDrvInterfaceTouchDeviceResume(struct early_suspend *pSuspend)
 void MsDrvInterfaceTouchDeviceSuspend(void)
 {
     
+    DBG("*** %s() ***\n", __func__);
 	
 #ifdef CONFIG_ENABLE_GESTURE_WAKEUP
 	u16 wkup_mode = 0;
 #endif
-    DBG("*** %s() ***\n", __func__);
 #ifdef CONFIG_UPDATE_FIRMWARE_BY_SW_ID
     if(program_over ==0)
 		return;
@@ -195,8 +195,7 @@ void MsDrvInterfaceTouchDeviceResume(void)
 //add by shihuijun for modifing resume and suspend after TP 20150403 start 
 static void mstar_pm_worker(struct work_struct *work)
 {
-    //DBG("*** %s() ***\n", __func__);
-	printk("%s():lcd status \%s\n",__func__,(mstar_blank == FB_BLANK_UNBLANK)?"FB_BLANK_UNBLANK":"FB_BLANK_POWERDOWN");
+    DBG("*** %s() ***\n", __func__);
 	if (mstar_blank == FB_BLANK_UNBLANK)
 		MsDrvInterfaceTouchDeviceResume();
 	else if (mstar_blank == FB_BLANK_POWERDOWN)
@@ -216,16 +215,8 @@ int fb_notifier_callback(struct notifier_block *self,
 		blank = evdata->data;
 		spin_lock_irqsave(&pm_lock, irqflags);
 		mstar_blank = *blank;
-		//modify by pangle for TP suspend interruptde by android sleep procedure at 20151021 begin
-		if(mstar_blank == FB_BLANK_UNBLANK)
-		{
-			queue_delayed_work(pm_wq, &pm_work, msecs_to_jiffies(120)); //resume  use 120ms timeout
-		}
-		else if(mstar_blank == FB_BLANK_POWERDOWN)
-		{
-			queue_delayed_work(pm_wq, &pm_work, msecs_to_jiffies(0));   //suspend don not use timeout
-		}
-		//modify by pangle for TP suspend interruptde by android sleep procedure at 20151021 end
+
+		queue_delayed_work(pm_wq, &pm_work, msecs_to_jiffies(120));
 		spin_unlock_irqrestore(&pm_lock, irqflags);
 #if 0
 		if (*blank == FB_BLANK_UNBLANK)

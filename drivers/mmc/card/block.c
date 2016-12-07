@@ -1392,7 +1392,8 @@ out:
 
 	return err ? 0 : 1;
 }
-/* Del by yanwenlong for wipe data time long. (general) 2014-9-4 begin */
+
+//Optimize for wipe data time long by zhangwei 2015-06-27 begin
 #if 0
 static int mmc_blk_issue_secdiscard_rq(struct mmc_queue *mq,
 				       struct request *req)
@@ -1468,7 +1469,7 @@ out:
 	return err ? 0 : 1;
 }
 #endif
-/* Del by yanwenlong for wipe data time long. (general) 2014-9-4 end */
+//Optimize for wipe data time long by zhangwei 2015-06-27 end
 
 static int mmc_blk_issue_flush(struct mmc_queue *mq, struct request *req)
 {
@@ -2821,7 +2822,7 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
 			mmc_blk_issue_rw_rq(mq, NULL);
 		if (cmd_flags & REQ_SECURE &&
 			!(card->quirks & MMC_QUIRK_SEC_ERASE_TRIM_BROKEN))
-                        ret = mmc_blk_issue_discard_rq(mq, req); // Modify by yanwenlong for wide data time long. (general) 2014-9-4
+			ret = mmc_blk_issue_discard_rq(mq, req);//Optimize for wipe data time long by zhangwei 2015-06-27
 		else
 			ret = mmc_blk_issue_discard_rq(mq, req);
 	} else if (cmd_flags & REQ_FLUSH) {

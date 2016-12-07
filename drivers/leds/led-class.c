@@ -57,31 +57,6 @@ static ssize_t led_brightness_store(struct device *dev,
 
 	return size;
 }
-//add by xingbin for lcm test-automation in factory begin
-static ssize_t  lcd_test_flags_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	struct led_classdev *led_cdev = dev_get_drvdata(dev);
-
-	return snprintf(buf, LED_BUFF_SIZE, "%u\n", led_cdev->flags);				
-}
-static ssize_t  lcd_test_flags_store(struct device *dev,
-		struct device_attribute *attr, const char *buf,size_t size)
-{
-	struct led_classdev *led_cdev = dev_get_drvdata(dev);
-	unsigned long lcd_test_flag;
-	ssize_t ret = -EINVAL;
-
-	ret = kstrtoul(buf, 10, &lcd_test_flag);
-	if (ret)
-		return ret;
-
-	led_cdev->flags=lcd_test_flag;
-
-	return size;
-		
-}
-//add by xingbin for lcm test-automation in factory end
 
 static ssize_t led_max_brightness_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
@@ -114,8 +89,6 @@ static struct device_attribute led_class_attrs[] = {
 	__ATTR(brightness, 0644, led_brightness_show, led_brightness_store),
 	__ATTR(max_brightness, 0644, led_max_brightness_show,
 			led_max_brightness_store),
-	//add by xingbin for lcm test-automation in factory
-	__ATTR(flags, 0644, lcd_test_flags_show,lcd_test_flags_store),		
 #ifdef CONFIG_LEDS_TRIGGERS
 	__ATTR(trigger, 0644, led_trigger_show, led_trigger_store),
 #endif

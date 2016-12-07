@@ -70,8 +70,6 @@ extern u8 g_ChipType;
 #if defined(CONFIG_ENABLE_CHIP_MSG26XXM)
 extern TestScopeInfo_t g_TestScopeInfo;
 #endif //CONFIG_ENABLE_CHIP_MSG26XXM
-extern u8 Mptest_id;   //add by pangle at 20151123 for ito test
-
 #endif //CONFIG_ENABLE_ITO_MP_TEST
 //merged by pangle at 20150228 end
 /*=============================================================*/
@@ -447,43 +445,15 @@ ssize_t DrvMainFirmwareGestureWakeupModeStore(struct device *pDevice, struct dev
         {
             g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_RIGHT_DIRECT_FLAG);
         }
-//modify by shihuijun for 860 gesture 20150602 start 
+//modify  by pangle for gesture display 20150304 begin
 #ifdef GESTURE_ALL_SWITCH
-				if ((nWakeupMode & GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG)
+        if ((nWakeupMode & GESTURE_WAKEUP_MODE_m_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_m_CHARACTER_FLAG)
         {
-            g_GestureWakeupMode = g_GestureWakeupMode | GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG;
+            g_GestureWakeupMode = g_GestureWakeupMode | GESTURE_WAKEUP_MODE_m_CHARACTER_FLAG;
         }
         else
         {
-            g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG);
-        }
-
-				
-				if ((nWakeupMode & GESTURE_WAKEUP_MODE_m_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_m_CHARACTER_FLAG)
-				{
-						g_GestureWakeupMode = g_GestureWakeupMode | GESTURE_WAKEUP_MODE_m_CHARACTER_FLAG;
-				}
-				else
-				{
-						g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_m_CHARACTER_FLAG);
-				}
-
-				if ((nWakeupMode & GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG)
-        {
-            g_GestureWakeupMode = g_GestureWakeupMode | GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG;
-        }
-        else
-        {
-            g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG);
-        }
-
-				if ((nWakeupMode & GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG)
-        {
-            g_GestureWakeupMode = g_GestureWakeupMode | GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG;
-        }
-        else
-        {
-            g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG);
+            g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_m_CHARACTER_FLAG);
         }
 
         if ((nWakeupMode & GESTURE_WAKEUP_MODE_W_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_W_CHARACTER_FLAG)
@@ -493,6 +463,24 @@ ssize_t DrvMainFirmwareGestureWakeupModeStore(struct device *pDevice, struct dev
         else
         {
             g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_W_CHARACTER_FLAG);
+        }
+
+        if ((nWakeupMode & GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG)
+        {
+            g_GestureWakeupMode = g_GestureWakeupMode | GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG;
+        }
+        else
+        {
+            g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_C_CHARACTER_FLAG);
+        }
+       
+        if ((nWakeupMode & GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG)
+        {
+            g_GestureWakeupMode = g_GestureWakeupMode | GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG;
+        }
+        else
+        {
+            g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_e_CHARACTER_FLAG);
         }
 
         if ((nWakeupMode & GESTURE_WAKEUP_MODE_V_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_V_CHARACTER_FLAG)
@@ -520,9 +508,18 @@ ssize_t DrvMainFirmwareGestureWakeupModeStore(struct device *pDevice, struct dev
         else
         {
             g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_S_CHARACTER_FLAG);
-        }    
+        }
+
+        if ((nWakeupMode & GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG) == GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG)
+        {
+            g_GestureWakeupMode = g_GestureWakeupMode | GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG;
+        }
+        else
+        {
+            g_GestureWakeupMode = g_GestureWakeupMode & (~GESTURE_WAKEUP_MODE_Z_CHARACTER_FLAG);
+        }
 #endif
-//modify by shihuijun for 860 gesture 20150602  end
+//modify  by pangle for gesture display 20150304 end
 
         DBG("g_GestureWakeupMode = 0x%x\n", g_GestureWakeupMode);
     }
@@ -1580,29 +1577,11 @@ if (device_create_file(_gFirmwareCmdDev, &dev_attr_gesture_infor) < 0)
     {
     		nRetVal = -ENODEV;
     }
-//modify by pangle for msg22xx add hardware info at 201500708 begin
+//modify by pangle for msg22xx add hardware info at 20150321 begin
 #ifdef CONFIG_GET_HARDWARE_INFO
 
 DrvFwCtrlGetCustomerFirmwareVersion(&nMajor, &nMinor, &pVersion);
-    Mptest_id = nMajor;   //add by pangle at 20151123 for ito test 
-    //printk("****pangle Mptest_id=%d****\n",Mptest_id);
-	if(nMajor == 1)	// major == 1 HXD
-	{
-		memset(tmp_str, 0, sizeof(tmp_str));
-		strcpy(tmp_str, "msg2238 HXD CTP-");
-		sprintf(tmp_str+strlen("msg2238 HXD CTP-"), "%03d%03d",
-		nMajor, nMinor);
-		register_hardware_info(CTP, tmp_str);
-	}
-	else if(nMajor == 5)	// major == 5 OFG
-	{
-		memset(tmp_str, 0, sizeof(tmp_str));
-		strcpy(tmp_str, "msg2238 OFG CTP-");
-		sprintf(tmp_str+strlen("msg2238 OFG CTP-"), "%03d%03d",
-		nMajor, nMinor);
-		register_hardware_info(CTP, tmp_str);
-	}
-  else if((nMajor == 3))	// major == 3 Yeji
+	if((nMajor == 3)||(nMajor == 2))	// major == 3 Yeji
 	{
 		memset(tmp_str, 0, sizeof(tmp_str));
 		strcpy(tmp_str, "msg2238 Yeji CTP-");
@@ -1610,7 +1589,15 @@ DrvFwCtrlGetCustomerFirmwareVersion(&nMajor, &nMinor, &pVersion);
 		nMajor, nMinor);
 		register_hardware_info(CTP, tmp_str);
 	}
-	//modify by shihuijun for hardware_info,add judge HXD vendor id = 3 20150708 end
+	else if(nMajor == 4)	// major == 3 Yeji
+	{
+		memset(tmp_str, 0, sizeof(tmp_str));
+		strcpy(tmp_str, "msg2238 Mudong CTP-");
+		sprintf(tmp_str+strlen("msg2238 Mudong CTP-"), "%03d%03d",
+		nMajor, nMinor);
+		register_hardware_info(CTP, tmp_str);
+	}
+	//modify by shihuijun for hardware_info,add judge Yeji vendor id = 3 20141029 end
 #endif
 //modify by pangle for msg22xx add hardware info at 20150321 end
 
@@ -1618,4 +1605,3 @@ DrvFwCtrlGetCustomerFirmwareVersion(&nMajor, &nMinor, &pVersion);
     return nRetVal;
 }
 
-//------------------------------------------------------------------------------//

@@ -1188,7 +1188,8 @@ ERROR1:
 	return rc;
 }
 
-static int msm_camera_enable_i2c_mux(struct msm_camera_i2c_conf *i2c_conf)
+//modified by yangze for camera cts test (qc805) 2014-01-18
+int msm_camera_enable_i2c_mux(struct msm_camera_i2c_conf *i2c_conf)
 {
 	struct v4l2_subdev *i2c_mux_sd =
 		dev_get_drvdata(&i2c_conf->mux_dev->dev);
@@ -1199,7 +1200,8 @@ static int msm_camera_enable_i2c_mux(struct msm_camera_i2c_conf *i2c_conf)
 	return 0;
 }
 
-static int msm_camera_disable_i2c_mux(struct msm_camera_i2c_conf *i2c_conf)
+//modified by yangze for camera cts test (qc805) 2014-01-18
+int msm_camera_disable_i2c_mux(struct msm_camera_i2c_conf *i2c_conf)
 {
 	struct v4l2_subdev *i2c_mux_sd =
 		dev_get_drvdata(&i2c_conf->mux_dev->dev);
@@ -1208,7 +1210,8 @@ static int msm_camera_disable_i2c_mux(struct msm_camera_i2c_conf *i2c_conf)
 	return 0;
 }
 
-static int msm_camera_pinctrl_init(struct msm_camera_power_ctrl_t *ctrl)
+//modified by yangze for camera cts test (qc805) 2014-01-18
+int msm_camera_pinctrl_init(struct msm_camera_power_ctrl_t *ctrl)
 {
 	struct msm_pinctrl_info *sensor_pctrl = NULL;
 
@@ -1436,7 +1439,8 @@ power_up_failed:
 	return rc;
 }
 
-static struct msm_sensor_power_setting*
+//modified by yangze for camera cts test (qc805) 2014-01-18
+struct msm_sensor_power_setting*
 msm_camera_get_power_settings(struct msm_camera_power_ctrl_t *ctrl,
 				enum msm_sensor_power_seq_type_t seq_type,
 				uint16_t seq_val)
@@ -1565,7 +1569,5 @@ int msm_camera_power_down(struct msm_camera_power_ctrl_t *ctrl,
 		ctrl->gpio_conf->cam_gpio_req_tbl,
 		ctrl->gpio_conf->cam_gpio_req_tbl_size, 0);
 	CDBG("%s exit\n", __func__);
-
-
 	return 0;
 }

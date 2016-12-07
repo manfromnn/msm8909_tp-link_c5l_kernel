@@ -67,7 +67,6 @@ static atomic_t quat_mi2s_clk_ref;
 static atomic_t auxpcm_mi2s_clk_ref;
 //Added by lichuangchuang for ext_spk pa control (8916) SW00000000 2014/05/28 begin
 int ext_spk_pa_gpio = -1;
-extern int ext_spk_mode;
 //Added by lichuangchuang for ext_spk pa control (8916) SW00000000 2014/05/28 end
 
 static int msm8x16_enable_codec_ext_clk(struct snd_soc_codec *codec, int enable,
@@ -284,13 +283,12 @@ static int msm_auxpcm_be_params_fixup(struct snd_soc_pcm_runtime *rtd,
 	return 0;
 }
 
-//modified by chaofubang for ext speaker pop noise as switching mode SW00000000 2015/06/29 start
 static int enable_spk_ext_pa(struct snd_soc_codec *codec, int enable)
 {
 	struct snd_soc_card *card = codec->card;
 	struct msm8916_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
 	int ret = 0;
-	int i;
+
 	if (!gpio_is_valid(pdata->spk_ext_pa_gpio)) {
 		pr_err("%s: Invalid gpio: %d\n", __func__,
 			pdata->spk_ext_pa_gpio);
@@ -307,20 +305,10 @@ static int enable_spk_ext_pa(struct snd_soc_codec *codec, int enable)
 		return -EINVAL;
 	}
 
-        if (enable) {
-            for (i = 0; i < ext_spk_mode; ++i) {
-                    gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, 0); 
-                    udelay(1);
-                    gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, 1); 
-                    udelay(1);
-            }
-        } else {
-            gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, 0); 
-        }
+	gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
 
 	return 0;
 }
-//modified by chaofubang for ext speaker pop noise as switching mode SW00000000 2015/06/29 end
 
 static int msm_pri_rx_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
 				struct snd_pcm_hw_params *params)
@@ -1378,18 +1366,18 @@ static void *def_msm8x16_wcd_mbhc_cal(void)
 	 * 210-290 == Button 2
 	 * 360-680 == Button 3
 	 */
-	//Modify by chaofubang for headset no button report in voicecall (8916) SW00143111 2015-06-11 start
-	btn_low[0] =100;
-	btn_high[0] = 100;
-	btn_low[1] = 250;
-	btn_high[1] = 250;
-	btn_low[2] = 420;
-	btn_high[2] = 420;
-	btn_low[3] = 420;
-	btn_high[3] = 420;
-	btn_low[4] = 420;
-	btn_high[4] = 420;
-	//Modify by chaofubang for headset no button report in voicecall (8916) SW00143111 2015-06-11 end
+	//Modify by lichuangchuang for some headset no button report (8916) SW00076555 2014-09-11 start
+	btn_low[0] = 0;
+	btn_high[0] = 150;
+	btn_low[1] = 150;
+	btn_high[1] = 150;
+	btn_low[2] = 150;
+	btn_high[2] = 150;
+	btn_low[3] = 150;
+	btn_high[3] = 150;
+	btn_low[4] = 150;
+	btn_high[4] = 150;
+	//Modify by lichuangchuang for some headset no button report (8916) SW00076555 2014-09-11 end
 	return msm8x16_wcd_cal;
 }
 
@@ -2588,7 +2576,7 @@ static int msm8x16_asoc_machine_probe(struct platform_device *pdev)
 	const char *hs_micbias_type = "qcom,msm-hs-micbias-type";
 	const char *ext_pa = "qcom,msm-ext-pa";
 	const char *mclk = "qcom,msm-mclk-freq";
-	const char *spk_ext_pa = "qcom,ext-spk-amp-gpio";
+	const char *spk_ext_pa = "qcom,msm-spk-ext-pa";
 	const char *ptr = NULL;
 	const char *type = NULL;
 	const char *ext_pa_str = NULL;

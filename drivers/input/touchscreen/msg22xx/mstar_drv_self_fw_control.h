@@ -117,10 +117,9 @@ typedef struct
  * Please modify the SW ID of the below enum value depends on the TP vendor that you are using.
  */
 typedef enum {
-    MSG22XX_SW_ID_HXD = 1,
-		//add by shihuijun for yeji SW_ID 20150611
-   // MSG22XX_SW_ID_YEJI = 0x0003,
-    MSG22xx_SW_ID_OFG = 5,
+    MSG22XX_SW_ID_DOUBLE = 2,
+    MSG22XX_SW_ID_YEJI = 3,
+//    MSG22XX_SW_ID_YYYY = 0x0002,  
     MSG22XX_SW_ID_UNDEFINED 
 } Msg22xxSwId_e;
 

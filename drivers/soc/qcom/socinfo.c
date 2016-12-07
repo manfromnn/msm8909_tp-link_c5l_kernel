@@ -120,33 +120,6 @@ const char *hw_platform_subtype[] = {
 	[PLATFORM_SUBTYPE_STRANGE_2A] = "strange_2a,"
 };
 
-//added by litao for board id 2014-06-17 begin
-enum {
-	MAINBOARD_CONFIG_0 = 0x0,
-	MAINBOARD_CONFIG_1 = 0x1,
-	MAINBOARD_CONFIG_2 = 0x2,
-	MAINBOARD_CONFIG_3 = 0x3,
-	MAINBOARD_CONFIG_4 = 0x4,
-	MAINBOARD_CONFIG_5 = 0x5,
-	MAINBOARD_CONFIG_6 = 0x6,
-	MAINBOARD_CONFIG_7 = 0x7,
-};
-
-const char *mainboard_config_type[] = {
-	[MAINBOARD_CONFIG_0] = "CONFIG_0",
-	[MAINBOARD_CONFIG_1] = "CONFIG_1",
-	[MAINBOARD_CONFIG_2] = "CONFIG_2",
-	[MAINBOARD_CONFIG_3] = "CONFIG_3",
-	[MAINBOARD_CONFIG_4] = "CONFIG_4",
-	[MAINBOARD_CONFIG_5] = "CONFIG_5",
-	[MAINBOARD_CONFIG_6] = "CONFIG_6",
-	[MAINBOARD_CONFIG_7] = "CONFIG_7",
-};
-#define MB_CONFIG_COUNT_MAX 8
-uint32_t *mainboard_config_g;
-
-//added by litao for board id 2014-06-17 end
-
 /* Used to parse shared memory.  Must match the modem. */
 struct socinfo_v1 {
 	uint32_t format;
@@ -946,33 +919,6 @@ msm_select_image(struct device *dev, struct device_attribute *attr,
 	return count;
 }
 
-//added by litao for board id 2014-06-17 begin
-uint32_t socinfo_get_mainboard_config(void)
-{
-	if(!mainboard_config_g)
-		return 0;
-	else
-	       return *mainboard_config_g;
-}
-static ssize_t
-socinfo_show_mainboard_config(struct device *dev,
-			struct device_attribute *attr,
-			char *buf)
-{
-	uint32_t mb_config;
-	mb_config = socinfo_get_mainboard_config();
-
-	if(mb_config>MB_CONFIG_COUNT_MAX-1)
-         mb_config=0;
-
-	printk("mb_config=%d,mainboard_config_type=%s\n",mb_config,mainboard_config_type[mb_config]);
-
-	return snprintf(buf, PAGE_SIZE,"%-.32s\n",mainboard_config_type[mb_config]);
-}
-
-static struct device_attribute socinfo_mainboard_config =
-	__ATTR(mainboard_config, S_IRUGO, socinfo_show_mainboard_config, NULL);
-//added by litao for board id 2014-06-17 end
 
 static struct device_attribute msm_soc_attr_raw_version =
 	__ATTR(raw_version, S_IRUGO, msm_get_raw_version,  NULL);
@@ -1099,9 +1045,6 @@ static void __init populate_soc_sysfs_files(struct device *msm_soc_device)
 	device_create_file(msm_soc_device, &image_variant);
 	device_create_file(msm_soc_device, &image_crm_version);
 	device_create_file(msm_soc_device, &select_image);
-
-//added by litao for board id 2014-06-17
-	device_create_file(msm_soc_device, &socinfo_mainboard_config);
 
 	switch (legacy_format) {
 	case 10:
@@ -1374,14 +1317,6 @@ int __init socinfo_init(void)
 				__func__);
 		socinfo = setup_dummy_socinfo();
 	}
-
-//added by litao for board id 2014-06-17 begin
-	mainboard_config_g = smem_alloc(SMEM_ID_VENDOR0, sizeof(uint32_t),0,SMEM_ANY_HOST_FLAG);//SMEM_ID_VENDOR0 is used to store mainboard config
-	if (!mainboard_config_g) {
-		pr_warn("%s: Can't find SMEM_ID_VENDOR0; falling back on dummy values.\n",
-				__func__);
-	}
-//added by litao for board id 2014-06-17 end
 
 	WARN(!socinfo_get_id(), "Unknown SOC ID!\n");
 
