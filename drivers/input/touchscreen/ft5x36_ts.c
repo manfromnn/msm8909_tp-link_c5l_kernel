@@ -599,7 +599,7 @@ static void fts_ts_worker(struct work_struct *work)
 	}
 
 //modify by shihuijun for charger interference to tp 20150728	begin	
-    #if  defined(CONFIG_QL613_BASE)    
+    #if  defined(CONFIG_C5L_BASE)    
     #ifdef FT_ENABLE_GESTURE_WAKEUP	
 	   if(!gesture_flag)
     #endif

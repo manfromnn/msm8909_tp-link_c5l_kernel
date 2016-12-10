@@ -1984,15 +1984,11 @@ int fts_create_apk_debug_channel(struct i2c_client * client)
 		mutex_lock(&g_device_mutex);
 
 		fts_disable_irq(ft5x36_ts);
-		//modify by pangle at 20150319 begin
-		 //printk("pangle trace %s,loading_fw:%d",__func__,ft5x36_ts->loading_fw);
 		 if (!ft5x36_ts->loading_fw) {
 				ft5x36_ts->loading_fw = true;
 				i_ret = fts_ctpm_fw_upgrade_with_i_file(client);
 				ft5x36_ts->loading_fw = false;
 		 	}
-		//modify by pangle at 20150319 end
-		//i_ret = fts_ctpm_fw_upgrade_with_i_file(client);
 		if (i_ret == 0) 
 		{
 			msleep(300);
