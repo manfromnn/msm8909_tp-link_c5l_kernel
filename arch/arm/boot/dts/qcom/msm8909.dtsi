@@ -331,7 +331,7 @@
 		clock-names = "cpu0_clk", "cpu1_clk",
 				"cpu2_clk", "cpu3_clk";
 		qcom,cpufreq-table =
-			 <  200000 >,
+			// <  200000 >,
 			 <  400000 >,
 			 <  533330 >,
 			 <  800000 >,
@@ -1143,8 +1143,6 @@
 	
 	nmi,nmi326{
 		compatible = "nmi,nmi325_isdbt";
-		pinctrl-names = "dtv_default";
-		pinctrl-0 = <&nmi326_reset_default &nmi326_power_default &nmi326_irq_default>;
 		nmi,reset-gpio = <&msm_gpio 20 0>;
 		nmi,power-enable-gpio = <&msm_gpio 21 0>;
 		nmi,irq-gpio = <&msm_gpio 36 0>;

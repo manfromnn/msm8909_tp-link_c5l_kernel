@@ -247,7 +247,7 @@ dtb-$(CONFIG_ARCH_MSM8992) += msm8992-sim.dtb \
 	msm8992-rumi.dtb
 	
 #added by yujunfeng begin
-dtb-$(CONFIG_QL613_BASE) += yep-msm8909-ql613-base.dtb
+dtb-$(CONFIG_C5L_BASE) += yep-msm8909-ql613-base.dtb
 #added by yujunfeng end
 
 DTB_NAMES := $(subst $\",,$(CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES))

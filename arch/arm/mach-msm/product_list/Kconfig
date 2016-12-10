@@ -36,9 +36,9 @@ config QL610_BASE
 #========================================================
 
 #========================================================
-config QL613_BASE
+config C5L_BASE
         depends on ARCH_MSM8909
-        bool "QL613_BASE version"
+        bool "C5L_BASE version"
         help
-          Fix version type as QL613_BASE.
+          Fix version type as C5L_BASE.
 #========================================================
