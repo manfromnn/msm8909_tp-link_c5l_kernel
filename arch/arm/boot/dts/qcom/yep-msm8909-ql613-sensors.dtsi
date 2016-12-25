@@ -83,6 +83,11 @@
 			vdd-supply = <&pm8909_l17>;
 			vio-supply = <&pm8909_l6>;
 			ap3426,irq-gpio = <&msm_gpio 110 0x2002>;
+			ap3426,ps-thdl = <100>;
+			ap3426,ps-thdh = <200>;
+			ap3426,ps-calibration-min = <0>;
+			ap3426,ps-calibration-expected = <120>;
+			ap3426,ps-calibration-max = <500>;
 		};
 		mCube@4c { /* Accelerometer sensor */
 			compatible = "mcube,mc3xxx";
